@@ -6,8 +6,8 @@ Production infrastructure for the [Model Context Protocol](https://modelcontextp
 
 | Package | Description | npm |
 |---------|-------------|-----|
-| [`@mcptools/analytics`](./packages/analytics/) | Lightweight analytics and observability for MCP servers | [![npm](https://img.shields.io/npm/v/@mcptools/analytics)](https://www.npmjs.com/package/@mcptools/analytics) |
-| [`@mcptools/proxy`](./packages/proxy/) | MCP proxy that aggregates multiple servers behind a single endpoint | [![npm](https://img.shields.io/npm/v/@mcptools/proxy)](https://www.npmjs.com/package/@mcptools/proxy) |
+| [`@gomcp/analytics`](./packages/analytics/) | Lightweight analytics and observability for MCP servers | [![npm](https://img.shields.io/npm/v/@gomcp/analytics)](https://www.npmjs.com/package/@gomcp/analytics) |
+| [`@gomcp/proxy`](./packages/proxy/) | MCP proxy that aggregates multiple servers behind a single endpoint | [![npm](https://img.shields.io/npm/v/@gomcp/proxy)](https://www.npmjs.com/package/@gomcp/proxy) |
 
 ## Why
 
@@ -23,7 +23,7 @@ These packages solve both problems with minimal dependencies.
 ### Analytics
 
 ```typescript
-import { McpAnalytics } from "@mcptools/analytics";
+import { McpAnalytics } from "@gomcp/analytics";
 
 const analytics = new McpAnalytics({ exporter: "console" });
 
@@ -42,7 +42,7 @@ analytics.getStats();
 ### Proxy
 
 ```typescript
-import { McpProxy, filter, cache } from "@mcptools/proxy";
+import { McpProxy, filter, cache } from "@gomcp/proxy";
 
 const proxy = new McpProxy({
   servers: {

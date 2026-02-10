@@ -40,7 +40,7 @@ async function initTracer(config: OtlpConfig): Promise<OtlpTracer> {
 
   if (config.useGlobalProvider) {
     // Use the global tracer provider (e.g. dd-trace registers itself here)
-    tracer = trace.getTracer("@mcptools/analytics");
+    tracer = trace.getTracer("@gomcp/analytics");
   } else {
     // Create an isolated provider with OTLP HTTP exporter
     const { BasicTracerProvider, SimpleSpanProcessor } = await import(
@@ -58,7 +58,7 @@ async function initTracer(config: OtlpConfig): Promise<OtlpTracer> {
     const provider = new BasicTracerProvider({
       spanProcessors: [new SimpleSpanProcessor(otlpExporter as any)],
     });
-    tracer = provider.getTracer("@mcptools/analytics");
+    tracer = provider.getTracer("@gomcp/analytics");
   }
 
   return {

@@ -1,4 +1,4 @@
-# @mcptools/analytics
+# @gomcp/analytics
 
 Lightweight analytics and observability for [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) servers. Zero required dependencies, framework-agnostic, works at the JSON-RPC transport level.
 
@@ -14,7 +14,7 @@ Lightweight analytics and observability for [Model Context Protocol](https://mod
 ## Installation
 
 ```bash
-npm install @mcptools/analytics
+npm install @gomcp/analytics
 ```
 
 ## Quick Start
@@ -22,7 +22,7 @@ npm install @mcptools/analytics
 ```typescript
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { McpAnalytics } from "@mcptools/analytics";
+import { McpAnalytics } from "@gomcp/analytics";
 
 // 1. Create analytics instance
 const analytics = new McpAnalytics({
@@ -183,7 +183,7 @@ When you use an APM like [dd-trace](https://github.com/DataDog/dd-trace-js) that
 ```typescript
 import "dd-trace/init"; // sets up dd-trace as global OTel provider
 
-import { McpAnalytics } from "@mcptools/analytics";
+import { McpAnalytics } from "@gomcp/analytics";
 
 const analytics = new McpAnalytics({
   exporter: "console",

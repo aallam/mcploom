@@ -30,12 +30,12 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Publish @mcptools/analytics
+      - name: Publish @gomcp/analytics
         run: npm publish --workspace=packages/analytics --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish @mcptools/proxy
+      - name: Publish @gomcp/proxy
         run: npm publish --workspace=packages/proxy --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

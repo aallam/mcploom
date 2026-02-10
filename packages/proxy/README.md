@@ -1,4 +1,4 @@
-# @mcptools/proxy
+# @gomcp/proxy
 
 Lightweight MCP proxy that aggregates multiple [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) servers behind a single endpoint. Route tool calls by name pattern, merge tool lists, and apply middleware.
 
@@ -13,13 +13,13 @@ Lightweight MCP proxy that aggregates multiple [Model Context Protocol](https://
 ## Installation
 
 ```bash
-npm install @mcptools/proxy
+npm install @gomcp/proxy
 ```
 
 ## Quick Start
 
 ```typescript
-import { McpProxy, filter, cache } from "@mcptools/proxy";
+import { McpProxy, filter, cache } from "@gomcp/proxy";
 
 const proxy = new McpProxy({
   // Backend MCP servers

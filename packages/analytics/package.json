@@ -1,5 +1,5 @@
 {
-  "name": "@mcptools/analytics",
+  "name": "@gomcp/analytics",
   "version": "0.1.0",
   "description": "Lightweight analytics and observability for MCP servers",
   "type": "module",
