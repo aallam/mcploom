@@ -8,9 +8,11 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     }
   },
+  "sideEffects": false,
   "files": [
     "dist",
     "README.md",
@@ -28,12 +30,34 @@
     "opentelemetry"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aallam/gomcp.git",
+    "directory": "packages/analytics"
+  },
+  "homepage": "https://github.com/aallam/gomcp/tree/main/packages/analytics#readme",
+  "bugs": "https://github.com/aallam/gomcp/issues",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "peerDependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0"
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@opentelemetry/api": "^1.0.0",
+    "@opentelemetry/sdk-trace-base": "^2.0.0",
+    "@opentelemetry/exporter-trace-otlp-http": ">=0.200.0"
   },
   "peerDependenciesMeta": {
     "@modelcontextprotocol/sdk": {
       "optional": false
+    },
+    "@opentelemetry/api": {
+      "optional": true
+    },
+    "@opentelemetry/sdk-trace-base": {
+      "optional": true
+    },
+    "@opentelemetry/exporter-trace-otlp-http": {
+      "optional": true
     }
   },
   "devDependencies": {

@@ -8,9 +8,11 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     }
   },
+  "sideEffects": false,
   "files": [
     "dist",
     "README.md",
@@ -28,6 +30,16 @@
     "aggregator"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aallam/gomcp.git",
+    "directory": "packages/proxy"
+  },
+  "homepage": "https://github.com/aallam/gomcp/tree/main/packages/proxy#readme",
+  "bugs": "https://github.com/aallam/gomcp/issues",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1"
   },

@@ -78,7 +78,8 @@ export function instrumentTransport(
         ) => {
           // Intercept incoming tools/call requests
           if (isRequest(message) && message.method === "tools/call") {
-            if (Math.random() < sampleRate) { // eslint-disable-line sonarjs/pseudo-random -- intentional for perf sampling, not security
+            // eslint-disable-next-line sonarjs/pseudo-random -- intentional for perf sampling, not security
+            if (Math.random() < sampleRate) {
               const params = message.params as
                 | { name?: string; arguments?: unknown }
                 | undefined;
