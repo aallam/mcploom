@@ -1,6 +1,6 @@
-# mcp-tools
+# gomcp
 
-Production infrastructure for the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP). Two packages that fill critical gaps in the MCP ecosystem: **observability** and **aggregation**.
+Production infrastructure for the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) — observability, aggregation, and more.
 
 ## Packages
 
@@ -11,12 +11,7 @@ Production infrastructure for the [Model Context Protocol](https://modelcontextp
 
 ## Why
 
-MCP frameworks exist for **building** servers. Nothing exists for **operating** them:
-
-1. **Zero observability** — no way to track which tools are called, how fast they run, what fails
-2. **No control layer** — production apps need routing, middleware, and centralized policies across multiple MCP servers
-
-These packages solve both problems with minimal dependencies.
+MCP frameworks help you **build** servers — gomcp helps you **run** them in production. It provides the operational layer that MCP itself doesn't: observability, routing, middleware, and centralized policies across multiple servers.
 
 ## Quick Start
 
@@ -46,11 +41,14 @@ import { McpProxy, filter, cache } from "@gomcp/proxy";
 
 const proxy = new McpProxy({
   servers: {
-    algolia: { url: "https://mcp.algolia.com/mcp" },
-    github: { url: "https://api.github.com/mcp" },
+    deepwiki: { url: "https://mcp.deepwiki.com/mcp" },
+    github: {
+      url: "https://api.githubcopilot.com/mcp/",
+      headers: { Authorization: "Bearer <GITHUB_TOKEN>" },
+    },
   },
   routing: [
-    { pattern: "algolia_*", server: "algolia" },
+    { pattern: "deepwiki_*", server: "deepwiki" },
     { pattern: "github_*", server: "github" },
   ],
   middleware: [

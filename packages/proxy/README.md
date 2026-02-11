@@ -42,14 +42,17 @@ import { McpProxy, filter, cache } from "@gomcp/proxy";
 const proxy = new McpProxy({
   // Backend MCP servers
   servers: {
-    algolia: { url: "https://mcp.algolia.com/mcp" },
-    github: { url: "https://api.github.com/mcp" },
+    deepwiki: { url: "https://mcp.deepwiki.com/mcp" },
+    github: {
+      url: "https://api.githubcopilot.com/mcp/",
+      headers: { Authorization: "Bearer <GITHUB_TOKEN>" },
+    },
     postgres: { command: "npx", args: ["@mcp/postgres-server"] },
   },
 
   // Route tool calls (first match wins)
   routing: [
-    { pattern: "algolia_*", server: "algolia" },
+    { pattern: "deepwiki_*", server: "deepwiki" },
     { pattern: "github_*", server: "github" },
     { pattern: "*", server: "postgres" },
   ],
@@ -124,7 +127,7 @@ Rules are evaluated in order (first match wins). Patterns support `*` (any chara
 
 ```typescript
 routing: [
-  { pattern: "algolia_*", server: "algolia" },    // algolia_search, algolia_browse
+  { pattern: "deepwiki_*", server: "deepwiki" },    // deepwiki_search, deepwiki_browse
   { pattern: "*_search", server: "search" },       // google_search, bing_search
   { pattern: "tool_?", server: "backend" },        // tool_a, tool_1
   { pattern: "*", server: "default" },             // catch-all
