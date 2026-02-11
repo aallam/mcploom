@@ -20,7 +20,7 @@ export class StdioBackendClient {
     this.transport = new StdioClientTransport({
       command: this.config.command,
       args: this.config.args,
-      env: this.config.env as Record<string, string> | undefined,
+      env: this.config.env,
     });
     this.client = new Client({ name: `proxy-${this.name}`, version: "1.0.0" });
     await this.client.connect(this.transport);

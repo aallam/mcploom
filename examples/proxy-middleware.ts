@@ -5,7 +5,11 @@
  * middleware. Uses proxy.callTool() directly (no HTTP server).
  */
 import { McpProxy, filter, cache, transform } from "@gomcp/proxy";
-import type { ProxyMiddleware } from "@gomcp/proxy";
+import type {
+  CacheStore,
+  MiddlewareResult,
+  ProxyMiddleware,
+} from "@gomcp/proxy";
 import { z } from "zod";
 import { startMockMcpServer } from "./_helpers.js";
 
@@ -46,6 +50,30 @@ async function main() {
   });
   console.log(`DB backend: ${db.url}`);
 
+  // Custom "Redis-like" cache store (backed by a Map that serializes to JSON)
+  const redisLikeStore: CacheStore = (() => {
+    const data = new Map<string, { json: string; expiresAt: number }>();
+    return {
+      async get(key: string): Promise<MiddlewareResult | undefined> {
+        const entry = data.get(key);
+        if (!entry || entry.expiresAt <= Date.now()) {
+          if (entry) data.delete(key);
+          return undefined;
+        }
+        return JSON.parse(entry.json) as MiddlewareResult;
+      },
+      async set(key: string, value: MiddlewareResult, ttl: number) {
+        data.set(key, {
+          json: JSON.stringify(value),
+          expiresAt: Date.now() + ttl * 1000,
+        });
+      },
+      async delete(key: string) {
+        data.delete(key);
+      },
+    };
+  })();
+
   // Custom logger middleware
   const logger: ProxyMiddleware = async (ctx, next) => {
     const start = Date.now();
@@ -67,7 +95,7 @@ async function main() {
     middleware: [
       logger,
       filter({ deny: ["db_delete"] }),
-      cache({ ttl: 60, maxSize: 100 }),
+      cache({ ttl: 60, store: redisLikeStore }),
       transform({
         before: (ctx) => {
           // Inject default limit for db_query

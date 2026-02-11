@@ -56,6 +56,18 @@ export interface MiddlewareResult {
 }
 
 /**
+ * Pluggable cache store for the cache middleware.
+ *
+ * The store owns expiration logic: `get` must return `undefined` for expired
+ * or missing entries. `ttl` is passed to `set` in **seconds**.
+ */
+export interface CacheStore {
+  get(key: string): Promise<MiddlewareResult | undefined>;
+  set(key: string, value: MiddlewareResult, ttl: number): Promise<void>;
+  delete(key: string): Promise<void>;
+}
+
+/**
  * Configuration for McpProxy.
  */
 export interface ProxyConfig {

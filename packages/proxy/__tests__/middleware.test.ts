@@ -6,7 +6,12 @@ import {
   transform,
   executeMiddlewareChain,
 } from "../src/middleware.js";
-import type { MiddlewareContext, MiddlewareResult } from "../src/types.js";
+import { MemoryCacheStore } from "../src/cache-store.js";
+import type {
+  CacheStore,
+  MiddlewareContext,
+  MiddlewareResult,
+} from "../src/types.js";
 
 function makeCtx(toolName: string): MiddlewareContext {
   return {
@@ -163,5 +168,122 @@ describe("executeMiddlewareChain", () => {
     const result = await executeMiddlewareChain([], makeCtx("test"), handler);
     expect(result).toEqual(okResult);
     expect(handler).toHaveBeenCalledOnce();
+  });
+});
+
+describe("cache with custom store", () => {
+  it("delegates get/set to the custom store", async () => {
+    const store: CacheStore = {
+      get: vi.fn().mockResolvedValue(undefined),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const mw = cache({ ttl: 30, store });
+    const handler = vi.fn().mockResolvedValue(okResult);
+
+    await mw(makeCtx("search"), handler);
+
+    expect(store.get).toHaveBeenCalledOnce();
+    expect(store.set).toHaveBeenCalledOnce();
+    expect((store.set as ReturnType<typeof vi.fn>).mock.calls[0]![2]).toBe(30);
+    expect(handler).toHaveBeenCalledOnce();
+  });
+
+  it("returns cached value from custom store without calling next", async () => {
+    const store: CacheStore = {
+      get: vi.fn().mockResolvedValue(okResult),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const mw = cache({ ttl: 30, store });
+    const handler = vi.fn().mockResolvedValue(okResult);
+
+    const result = await mw(makeCtx("search"), handler);
+
+    expect(result).toEqual(okResult);
+    expect(handler).not.toHaveBeenCalled();
+    expect(store.set).not.toHaveBeenCalled();
+  });
+
+  it("does not cache errors with custom store", async () => {
+    const store: CacheStore = {
+      get: vi.fn().mockResolvedValue(undefined),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const errorResult: MiddlewareResult = {
+      content: [{ type: "text", text: "fail" }],
+      isError: true,
+    };
+    const mw = cache({ ttl: 30, store });
+    const handler = vi.fn().mockResolvedValue(errorResult);
+
+    await mw(makeCtx("fail"), handler);
+
+    expect(store.set).not.toHaveBeenCalled();
+  });
+
+  it("ignores maxSize when custom store is provided", async () => {
+    const store: CacheStore = {
+      get: vi.fn().mockResolvedValue(undefined),
+      set: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined),
+    };
+
+    // maxSize should have no effect — the custom store manages its own capacity
+    const mw = cache({ ttl: 30, maxSize: 1, store });
+    const handler = vi.fn().mockResolvedValue(okResult);
+
+    await mw(makeCtx("a"), handler);
+    await mw(makeCtx("b"), handler);
+
+    expect(store.set).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("MemoryCacheStore", () => {
+  it("returns undefined for a missing key", async () => {
+    const store = new MemoryCacheStore();
+    expect(await store.get("nope")).toBeUndefined();
+  });
+
+  it("returns undefined for an expired entry", async () => {
+    const store = new MemoryCacheStore();
+    await store.set("k", okResult, 0); // ttl=0 → expires immediately
+    // Small delay to ensure Date.now() moves past expiresAt
+    await new Promise((r) => setTimeout(r, 5));
+    expect(await store.get("k")).toBeUndefined();
+  });
+
+  it("evicts oldest entry when maxSize is reached", async () => {
+    const store = new MemoryCacheStore({ maxSize: 2 });
+    const a: MiddlewareResult = {
+      content: [{ type: "text", text: "a" }],
+    };
+    const b: MiddlewareResult = {
+      content: [{ type: "text", text: "b" }],
+    };
+    const c: MiddlewareResult = {
+      content: [{ type: "text", text: "c" }],
+    };
+
+    await store.set("a", a, 60);
+    await store.set("b", b, 60);
+    await store.set("c", c, 60); // should evict "a"
+
+    expect(await store.get("a")).toBeUndefined();
+    expect(await store.get("b")).toEqual(b);
+    expect(await store.get("c")).toEqual(c);
+  });
+
+  it("delete removes an entry", async () => {
+    const store = new MemoryCacheStore();
+    await store.set("k", okResult, 60);
+    expect(await store.get("k")).toEqual(okResult);
+    await store.delete("k");
+    expect(await store.get("k")).toBeUndefined();
   });
 });

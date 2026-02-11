@@ -27,7 +27,7 @@ export class McpProxy {
   private readonly router: Router;
   private readonly backends = new Map<string, BackendClient>();
   private readonly middleware: ProxyMiddleware[];
-  private toolIndex = new Map<string, ToolInfo>();
+  private readonly toolIndex = new Map<string, ToolInfo>();
 
   constructor(config: ProxyConfig) {
     this.config = config;
@@ -256,7 +256,7 @@ export class McpProxy {
   getBackends(): BackendInfo[] {
     return [...this.backends.entries()].map(([name, client]) => ({
       name,
-      config: this.config.servers[name]!,
+      config: this.config.servers[name],
       tools: [...this.toolIndex.values()].filter((t) => t.backend === name),
       connected: client.connected,
     }));

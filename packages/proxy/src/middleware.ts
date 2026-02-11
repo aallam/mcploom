@@ -1,4 +1,6 @@
+import { MemoryCacheStore } from "./cache-store.js";
 import type {
+  CacheStore,
   MiddlewareContext,
   MiddlewareResult,
   ProxyMiddleware,
@@ -41,31 +43,23 @@ export function filter(opts: {
 export function cache(opts: {
   ttl: number;
   maxSize?: number;
+  store?: CacheStore;
 }): ProxyMiddleware {
-  const store = new Map<
-    string,
-    { result: MiddlewareResult; expiresAt: number }
-  >();
-  const maxSize = opts.maxSize ?? 1000;
+  const store = opts.store ?? new MemoryCacheStore({ maxSize: opts.maxSize });
 
   return async (ctx, next) => {
     const key = JSON.stringify({ tool: ctx.toolName, args: ctx.arguments });
-    const cached = store.get(key);
+    const cached = await store.get(key);
 
-    if (cached && cached.expiresAt > Date.now()) {
-      return cached.result;
+    if (cached !== undefined) {
+      return cached;
     }
 
     const result = await next();
 
     // Only cache successful results
     if (!result.isError) {
-      // Evict oldest if at capacity
-      if (store.size >= maxSize) {
-        const oldest = store.keys().next().value;
-        if (oldest !== undefined) store.delete(oldest);
-      }
-      store.set(key, { result, expiresAt: Date.now() + opts.ttl * 1000 });
+      await store.set(key, result, opts.ttl);
     }
 
     return result;
@@ -102,7 +96,7 @@ export function executeMiddlewareChain(
     if (index >= middleware.length) {
       return handler();
     }
-    const mw = middleware[index]!;
+    const mw = middleware[index];
     index++;
     return mw(ctx, next);
   };

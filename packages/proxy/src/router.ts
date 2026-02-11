@@ -6,9 +6,9 @@ import type { RoutingRule } from "./types.js";
  */
 function globToRegex(pattern: string): RegExp {
   const escaped = pattern
-    .replace(/[.+^${}()|[\]\\]/g, "\\$&")
-    .replace(/\*/g, ".*")
-    .replace(/\?/g, ".");
+    .replace(/[.+^${}()|[\]\\]/g, String.raw`\$&`)
+    .replaceAll("*", ".*")
+    .replaceAll("?", ".");
   return new RegExp(`^${escaped}$`);
 }
 
