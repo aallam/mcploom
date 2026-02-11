@@ -103,7 +103,9 @@ describe("McpAnalytics", () => {
       onerror: undefined,
     };
 
-    const instrumented = analytics.instrument(transport as unknown as Transport);
+    const instrumented = analytics.instrument(
+      transport as unknown as Transport,
+    );
     expect(instrumented).toBeDefined();
     // The proxy should still expose transport methods
     expect(typeof instrumented.start).toBe("function");

@@ -59,7 +59,13 @@ export class McpAnalytics {
    * Returns proxy transport that can be used in place of the original.
    */
   instrument(transport: Transport): InstrumentedTransport {
-    return instrumentTransport(transport, this.collector, this.sampleRate, this.metadata, this.tracing);
+    return instrumentTransport(
+      transport,
+      this.collector,
+      this.sampleRate,
+      this.metadata,
+      this.tracing,
+    );
   }
 
   /**
@@ -77,7 +83,14 @@ export class McpAnalytics {
     toolName?: string,
   ): (...args: TArgs) => Promise<TResult> {
     const name = toolName ?? (handler.name || "anonymous");
-    return wrapToolHandler(name, handler, this.collector, this.sampleRate, this.metadata, this.tracing);
+    return wrapToolHandler(
+      name,
+      handler,
+      this.collector,
+      this.sampleRate,
+      this.metadata,
+      this.tracing,
+    );
   }
 
   /**
@@ -125,7 +138,9 @@ export class McpAnalytics {
         return createConsoleExporter();
       case "json": {
         if (!config.json) {
-          throw new Error('McpAnalytics: "json" exporter requires a "json" config with "path"');
+          throw new Error(
+            'McpAnalytics: "json" exporter requires a "json" config with "path"',
+          );
         }
         return createJsonExporter(config.json);
       }

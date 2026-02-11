@@ -28,7 +28,9 @@ describe("Collector", () => {
   it("records events and computes basic stats", () => {
     collector.record(makeEvent({ durationMs: 100 }));
     collector.record(makeEvent({ durationMs: 200 }));
-    collector.record(makeEvent({ durationMs: 300, success: false, errorMessage: "fail" }));
+    collector.record(
+      makeEvent({ durationMs: 300, success: false, errorMessage: "fail" }),
+    );
 
     const stats = collector.getStats();
     expect(stats.totalCalls).toBe(3);

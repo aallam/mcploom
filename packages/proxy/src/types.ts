@@ -91,10 +91,14 @@ export interface ToolInfo {
   backend: string;
 }
 
-export function isHttpConfig(config: BackendConfig): config is HttpBackendConfig {
+export function isHttpConfig(
+  config: BackendConfig,
+): config is HttpBackendConfig {
   return "url" in config;
 }
 
-export function isStdioConfig(config: BackendConfig): config is StdioBackendConfig {
+export function isStdioConfig(
+  config: BackendConfig,
+): config is StdioBackendConfig {
   return "command" in config;
 }

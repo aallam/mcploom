@@ -18,7 +18,12 @@ async function main() {
       "Get current weather",
       { city: z.string() },
       async ({ city }) => ({
-        content: [{ type: "text" as const, text: `Current weather in ${city}: 22°C, sunny` }],
+        content: [
+          {
+            type: "text" as const,
+            text: `Current weather in ${city}: 22°C, sunny`,
+          },
+        ],
       }),
     );
     server.tool(
@@ -45,7 +50,10 @@ async function main() {
       { symbol: z.string() },
       async ({ symbol }) => ({
         content: [
-          { type: "text" as const, text: `${symbol}: $${(Math.random() * 500).toFixed(2)}` },
+          {
+            type: "text" as const,
+            text: `${symbol}: $${(Math.random() * 500).toFixed(2)}`,
+          },
         ],
       }),
     );
@@ -54,7 +62,12 @@ async function main() {
       "Get stock history",
       { symbol: z.string(), days: z.number() },
       async ({ symbol, days }) => ({
-        content: [{ type: "text" as const, text: `${symbol} ${days}-day history: [...]` }],
+        content: [
+          {
+            type: "text" as const,
+            text: `${symbol} ${days}-day history: [...]`,
+          },
+        ],
       }),
     );
   });

@@ -17,7 +17,10 @@ vi.mock("../src/transports/http.js", () => ({
           {
             name: "algolia_search",
             description: "Search Algolia",
-            inputSchema: { type: "object", properties: { query: { type: "string" } } },
+            inputSchema: {
+              type: "object",
+              properties: { query: { type: "string" } },
+            },
             backend: "algolia",
           },
           {

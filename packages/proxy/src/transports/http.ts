@@ -17,18 +17,22 @@ export class HttpBackendClient {
   ) {}
 
   async connect(): Promise<void> {
-    this.transport = new StreamableHTTPClientTransport(new URL(this.config.url), {
-      requestInit: {
-        headers: this.config.headers ?? {},
+    this.transport = new StreamableHTTPClientTransport(
+      new URL(this.config.url),
+      {
+        requestInit: {
+          headers: this.config.headers ?? {},
+        },
       },
-    });
+    );
     this.client = new Client({ name: `proxy-${this.name}`, version: "1.0.0" });
     await this.client.connect(this.transport);
   }
 
   async listTools(): Promise<ToolInfo[]> {
     if (this.cachedTools) return this.cachedTools;
-    if (!this.client) throw new Error(`Backend "${this.name}" is not connected`);
+    if (!this.client)
+      throw new Error(`Backend "${this.name}" is not connected`);
 
     const result = await this.client.listTools();
     this.cachedTools = result.tools.map((t) => ({
@@ -43,11 +47,21 @@ export class HttpBackendClient {
   async callTool(
     toolName: string,
     args: Record<string, unknown>,
-  ): Promise<{ content: Array<{ type: string; [key: string]: unknown }>; isError?: boolean }> {
-    if (!this.client) throw new Error(`Backend "${this.name}" is not connected`);
-    const result = await this.client.callTool({ name: toolName, arguments: args });
+  ): Promise<{
+    content: Array<{ type: string; [key: string]: unknown }>;
+    isError?: boolean;
+  }> {
+    if (!this.client)
+      throw new Error(`Backend "${this.name}" is not connected`);
+    const result = await this.client.callTool({
+      name: toolName,
+      arguments: args,
+    });
     return {
-      content: (result.content ?? []) as Array<{ type: string; [key: string]: unknown }>,
+      content: (result.content ?? []) as Array<{
+        type: string;
+        [key: string]: unknown;
+      }>,
       isError: result.isError as boolean | undefined,
     };
   }

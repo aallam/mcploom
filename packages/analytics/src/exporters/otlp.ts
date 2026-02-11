@@ -43,12 +43,10 @@ async function initTracer(config: OtlpConfig): Promise<OtlpTracer> {
     tracer = trace.getTracer("@gomcp/analytics");
   } else {
     // Create an isolated provider with OTLP HTTP exporter
-    const { BasicTracerProvider, SimpleSpanProcessor } = await import(
-      "@opentelemetry/sdk-trace-base"
-    );
-    const { OTLPTraceExporter } = await import(
-      "@opentelemetry/exporter-trace-otlp-http"
-    );
+    const { BasicTracerProvider, SimpleSpanProcessor } =
+      await import("@opentelemetry/sdk-trace-base");
+    const { OTLPTraceExporter } =
+      await import("@opentelemetry/exporter-trace-otlp-http");
 
     otlpExporter = new OTLPTraceExporter({
       url: config.endpoint,
@@ -56,7 +54,11 @@ async function initTracer(config: OtlpConfig): Promise<OtlpTracer> {
     });
 
     const provider = new BasicTracerProvider({
-      spanProcessors: [new SimpleSpanProcessor(otlpExporter as unknown as import("@opentelemetry/sdk-trace-base").SpanExporter)],
+      spanProcessors: [
+        new SimpleSpanProcessor(
+          otlpExporter as unknown as import("@opentelemetry/sdk-trace-base").SpanExporter,
+        ),
+      ],
     });
     tracer = provider.getTracer("@gomcp/analytics");
   }
@@ -72,16 +74,26 @@ async function initTracer(config: OtlpConfig): Promise<OtlpTracer> {
           "mcp.tool.input_size": event.inputSize,
           "mcp.tool.output_size": event.outputSize,
           ...(event.sessionId && { "mcp.session.id": event.sessionId }),
-          ...(event.errorMessage && { "mcp.tool.error_message": event.errorMessage }),
-          ...(event.errorCode !== undefined && { "mcp.tool.error_code": event.errorCode }),
+          ...(event.errorMessage && {
+            "mcp.tool.error_message": event.errorMessage,
+          }),
+          ...(event.errorCode !== undefined && {
+            "mcp.tool.error_code": event.errorCode,
+          }),
           ...Object.fromEntries(
-            Object.entries(event.metadata ?? {}).map(([k, v]) => [`mcp.meta.${k}`, v]),
+            Object.entries(event.metadata ?? {}).map(([k, v]) => [
+              `mcp.meta.${k}`,
+              v,
+            ]),
           ),
         },
       });
 
       if (!event.success) {
-        span.setStatus({ code: SpanStatusCode.ERROR, message: event.errorMessage });
+        span.setStatus({
+          code: SpanStatusCode.ERROR,
+          message: event.errorMessage,
+        });
       }
 
       span.end(new Date(event.timestamp + event.durationMs));

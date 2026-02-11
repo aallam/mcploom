@@ -12,7 +12,9 @@ function makeTransport() {
     close: vi.fn().mockResolvedValue(undefined),
     onclose: undefined as (() => void) | undefined,
     onerror: undefined as ((error: Error) => void) | undefined,
-    onmessage: undefined as ((message: unknown, extra?: unknown) => void) | undefined,
+    onmessage: undefined as
+      | ((message: unknown, extra?: unknown) => void)
+      | undefined,
     sessionId: "test-session",
   };
 }
@@ -150,7 +152,9 @@ describe("wrapToolHandler", () => {
   });
 
   it("tracks successful handler execution", async () => {
-    const handler = vi.fn().mockResolvedValue({ content: [{ type: "text", text: "ok" }] });
+    const handler = vi
+      .fn()
+      .mockResolvedValue({ content: [{ type: "text", text: "ok" }] });
     const wrapped = wrapToolHandler("my_tool", handler, collector, 1.0);
 
     const result = await wrapped({ query: "test" });
@@ -204,7 +208,11 @@ describe("wrapToolHandler", () => {
   });
 
   describe("with tracing enabled", () => {
-    const mockSpan = { setAttribute: vi.fn(), setStatus: vi.fn(), end: vi.fn() };
+    const mockSpan = {
+      setAttribute: vi.fn(),
+      setStatus: vi.fn(),
+      end: vi.fn(),
+    };
     const mockTracingSpan = { span: mockSpan, context: {} };
 
     beforeEach(() => {
@@ -234,10 +242,7 @@ describe("wrapToolHandler", () => {
         "mcp.tool.input_size": expect.any(Number),
       });
       expect(tracing.withSpanContext).toHaveBeenCalled();
-      expect(tracing.endToolSpan).toHaveBeenCalledWith(
-        mockTracingSpan,
-        true,
-      );
+      expect(tracing.endToolSpan).toHaveBeenCalledWith(mockTracingSpan, true);
       expect(handler).toHaveBeenCalled();
     });
 

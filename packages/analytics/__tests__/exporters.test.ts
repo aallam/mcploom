@@ -25,7 +25,10 @@ describe("consoleExporter", () => {
     const spy = vi.spyOn(console, "log").mockImplementation(() => {});
     const exporter = createConsoleExporter();
 
-    await exporter([makeEvent(), makeEvent({ toolName: "other", success: false, errorCode: -32603 })]);
+    await exporter([
+      makeEvent(),
+      makeEvent({ toolName: "other", success: false, errorCode: -32603 }),
+    ]);
 
     expect(spy).toHaveBeenCalledOnce();
     const output = spy.mock.calls[0]![0] as string;

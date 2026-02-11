@@ -15,7 +15,10 @@ function makeTool(name: string, backend: string): ToolInfo {
 describe("aggregateTools", () => {
   it("merges tools from multiple backends", () => {
     const map = new Map<string, ToolInfo[]>();
-    map.set("algolia", [makeTool("search", "algolia"), makeTool("browse", "algolia")]);
+    map.set("algolia", [
+      makeTool("search", "algolia"),
+      makeTool("browse", "algolia"),
+    ]);
     map.set("github", [makeTool("issues", "github")]);
 
     const result = aggregateTools(map);

@@ -112,14 +112,20 @@ describe("executeMiddlewareChain", () => {
   it("executes middleware in order", async () => {
     const order: number[] = [];
 
-    const mw1 = async (_ctx: MiddlewareContext, next: () => Promise<MiddlewareResult>) => {
+    const mw1 = async (
+      _ctx: MiddlewareContext,
+      next: () => Promise<MiddlewareResult>,
+    ) => {
       order.push(1);
       const result = await next();
       order.push(4);
       return result;
     };
 
-    const mw2 = async (_ctx: MiddlewareContext, next: () => Promise<MiddlewareResult>) => {
+    const mw2 = async (
+      _ctx: MiddlewareContext,
+      next: () => Promise<MiddlewareResult>,
+    ) => {
       order.push(2);
       const result = await next();
       order.push(3);
@@ -142,7 +148,11 @@ describe("executeMiddlewareChain", () => {
     });
 
     const handler = vi.fn().mockResolvedValue(okResult);
-    const result = await executeMiddlewareChain([blocker], makeCtx("test"), handler);
+    const result = await executeMiddlewareChain(
+      [blocker],
+      makeCtx("test"),
+      handler,
+    );
 
     expect(result.isError).toBe(true);
     expect(handler).not.toHaveBeenCalled();

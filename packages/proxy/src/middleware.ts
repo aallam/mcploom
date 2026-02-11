@@ -14,13 +14,20 @@ export function filter(opts: {
   return async (ctx, next) => {
     if (opts.deny?.includes(ctx.toolName)) {
       return {
-        content: [{ type: "text", text: `Tool "${ctx.toolName}" is denied by filter policy` }],
+        content: [
+          {
+            type: "text",
+            text: `Tool "${ctx.toolName}" is denied by filter policy`,
+          },
+        ],
         isError: true,
       };
     }
     if (opts.allow && !opts.allow.includes(ctx.toolName)) {
       return {
-        content: [{ type: "text", text: `Tool "${ctx.toolName}" is not in allow list` }],
+        content: [
+          { type: "text", text: `Tool "${ctx.toolName}" is not in allow list` },
+        ],
         isError: true,
       };
     }
@@ -35,7 +42,10 @@ export function cache(opts: {
   ttl: number;
   maxSize?: number;
 }): ProxyMiddleware {
-  const store = new Map<string, { result: MiddlewareResult; expiresAt: number }>();
+  const store = new Map<
+    string,
+    { result: MiddlewareResult; expiresAt: number }
+  >();
   const maxSize = opts.maxSize ?? 1000;
 
   return async (ctx, next) => {

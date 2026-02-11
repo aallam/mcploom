@@ -58,10 +58,12 @@ export class McpProxy {
    */
   async refreshToolIndex(): Promise<void> {
     const toolsByBackend = new Map<string, ToolInfo[]>();
-    const listPromises = [...this.backends.entries()].map(async ([name, client]) => {
-      const tools = await client.listTools();
-      toolsByBackend.set(name, tools);
-    });
+    const listPromises = [...this.backends.entries()].map(
+      async ([name, client]) => {
+        const tools = await client.listTools();
+        toolsByBackend.set(name, tools);
+      },
+    );
     await Promise.all(listPromises);
 
     const aggregated = aggregateTools(toolsByBackend);
@@ -88,7 +90,9 @@ export class McpProxy {
     const serverName = this.router.resolve(toolName);
     if (!serverName) {
       return {
-        content: [{ type: "text", text: `No routing rule matches tool "${toolName}"` }],
+        content: [
+          { type: "text", text: `No routing rule matches tool "${toolName}"` },
+        ],
         isError: true,
       };
     }
@@ -128,7 +132,9 @@ export class McpProxy {
     for (const tool of this.toolIndex.values()) {
       const shape: Record<string, z.ZodTypeAny> = {};
       if (tool.inputSchema.properties) {
-        for (const key of Object.keys(tool.inputSchema.properties as Record<string, unknown>)) {
+        for (const key of Object.keys(
+          tool.inputSchema.properties as Record<string, unknown>,
+        )) {
           shape[key] = z.any().optional();
         }
       }
@@ -157,7 +163,9 @@ export class McpProxy {
   /**
    * Start the proxy as a Streamable HTTP server on the given port.
    */
-  async listen(opts: { port: number }): Promise<{ close: () => Promise<void> }> {
+  async listen(opts: {
+    port: number;
+  }): Promise<{ close: () => Promise<void> }> {
     await this.connect();
 
     const server = this.createServer();

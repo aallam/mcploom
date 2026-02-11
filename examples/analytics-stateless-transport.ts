@@ -1,8 +1,12 @@
 /**
- * Analytics: Instrument Transport
+ * Analytics: Stateless Transport Instrumentation
  *
- * Demonstrates analytics.instrument() at the transport level with a real
- * MCP server and client communicating over HTTP.
+ * Demonstrates analytics.instrument() with a stateless MCP server.
+ * In stateless mode:
+ *   - sessionIdGenerator is set to `undefined`
+ *   - No session tracking — each request is self-contained
+ *   - Only POST is needed (no GET/SSE or DELETE handlers)
+ *   - A fresh transport and server connection per request
  */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
@@ -21,85 +25,64 @@ async function readBody(req: IncomingMessage): Promise<unknown> {
 }
 
 async function main() {
-  console.log("=== Analytics: Instrument Transport ===\n");
+  console.log("=== Analytics: Stateless Transport ===\n");
 
-  // Create MCP server with tools
-  const server = new McpServer({ name: "analytics-demo", version: "1.0.0" });
+  // Factory to create a fresh MCP server per request (stateless — no shared state)
+  function createMcpServer(): McpServer {
+    const server = new McpServer({
+      name: "analytics-stateless",
+      version: "1.0.0",
+    });
 
-  server.tool(
-    "greet",
-    "Greet someone",
-    { name: z.string() },
-    async ({ name }) => ({
-      content: [{ type: "text" as const, text: `Hello, ${name}!` }],
-    }),
-  );
+    server.tool(
+      "greet",
+      "Greet someone",
+      { name: z.string() },
+      async ({ name }) => ({
+        content: [{ type: "text" as const, text: `Hello, ${name}!` }],
+      }),
+    );
 
-  server.tool(
-    "add",
-    "Add two numbers",
-    { a: z.number(), b: z.number() },
-    async ({ a, b }) => ({
-      content: [{ type: "text" as const, text: `${a} + ${b} = ${a + b}` }],
-    }),
-  );
+    server.tool(
+      "add",
+      "Add two numbers",
+      { a: z.number(), b: z.number() },
+      async ({ a, b }) => ({
+        content: [{ type: "text" as const, text: `${a} + ${b} = ${a + b}` }],
+      }),
+    );
+
+    return server;
+  }
 
   // Create analytics with console exporter
   const analytics = new McpAnalytics({ exporter: "console" });
 
-  // Start HTTP server — instrument each session transport
-  const sessions = new Map<string, StreamableHTTPServerTransport>();
-
+  // Start stateless HTTP server — no session map, no GET/DELETE handlers
   const httpServer = createServer(async (req, res) => {
     const url = new URL(req.url ?? "/", `http://localhost:${PORT}`);
 
     if (url.pathname === "/mcp" && req.method === "POST") {
       const body = await readBody(req);
-      const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
-      let transport = sessionId ? sessions.get(sessionId) : undefined;
+      // Fresh transport and server per request (stateless — no session ID)
+      const transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: undefined,
+      });
 
-      if (!transport) {
-        transport = new StreamableHTTPServerTransport({
-          sessionIdGenerator: () => crypto.randomUUID(),
-          onsessioninitialized: (id) => {
-            sessions.set(id, transport!);
-          },
-        });
-
-        // Instrument the transport before connecting to the server
-        const instrumented = analytics.instrument(transport);
-        await server.connect(instrumented);
-      }
+      // Instrument the transport before connecting to a fresh server
+      const instrumented = analytics.instrument(transport);
+      await createMcpServer().connect(instrumented);
 
       await transport.handleRequest(req, res, body);
-    } else if (url.pathname === "/mcp" && req.method === "GET") {
-      const sessionId = req.headers["mcp-session-id"] as string | undefined;
-      const transport = sessionId ? sessions.get(sessionId) : undefined;
-      if (transport) {
-        await transport.handleRequest(req, res);
-      } else {
-        res.writeHead(400);
-        res.end(JSON.stringify({ error: "No session" }));
-      }
-    } else if (url.pathname === "/mcp" && req.method === "DELETE") {
-      const sessionId = req.headers["mcp-session-id"] as string | undefined;
-      const transport = sessionId ? sessions.get(sessionId) : undefined;
-      if (transport) {
-        await transport.handleRequest(req, res);
-        sessions.delete(sessionId!);
-      } else {
-        res.writeHead(400);
-        res.end(JSON.stringify({ error: "No session" }));
-      }
     } else {
-      res.writeHead(404);
-      res.end();
+      res.writeHead(405);
+      res.end(JSON.stringify({ error: "Method not allowed. Use POST /mcp" }));
     }
   });
 
   await new Promise<void>((resolve) => httpServer.listen(PORT, resolve));
-  console.log(`Server listening on http://localhost:${PORT}/mcp\n`);
+  console.log(`Stateless server on http://localhost:${PORT}/mcp\n`);
 
   // Connect client and make tool calls
   const client = new Client({ name: "demo-client", version: "1.0.0" });
@@ -136,7 +119,6 @@ async function main() {
 
   // Cleanup
   await client.close();
-  for (const t of sessions.values()) await t.close();
   await new Promise<void>((resolve, reject) => {
     httpServer.close((err) => (err ? reject(err) : resolve()));
   });

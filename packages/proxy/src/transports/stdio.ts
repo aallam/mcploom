@@ -28,7 +28,8 @@ export class StdioBackendClient {
 
   async listTools(): Promise<ToolInfo[]> {
     if (this.cachedTools) return this.cachedTools;
-    if (!this.client) throw new Error(`Backend "${this.name}" is not connected`);
+    if (!this.client)
+      throw new Error(`Backend "${this.name}" is not connected`);
 
     const result = await this.client.listTools();
     this.cachedTools = result.tools.map((t) => ({
@@ -43,11 +44,21 @@ export class StdioBackendClient {
   async callTool(
     toolName: string,
     args: Record<string, unknown>,
-  ): Promise<{ content: Array<{ type: string; [key: string]: unknown }>; isError?: boolean }> {
-    if (!this.client) throw new Error(`Backend "${this.name}" is not connected`);
-    const result = await this.client.callTool({ name: toolName, arguments: args });
+  ): Promise<{
+    content: Array<{ type: string; [key: string]: unknown }>;
+    isError?: boolean;
+  }> {
+    if (!this.client)
+      throw new Error(`Backend "${this.name}" is not connected`);
+    const result = await this.client.callTool({
+      name: toolName,
+      arguments: args,
+    });
     return {
-      content: (result.content ?? []) as Array<{ type: string; [key: string]: unknown }>,
+      content: (result.content ?? []) as Array<{
+        type: string;
+        [key: string]: unknown;
+      }>,
       isError: result.isError as boolean | undefined,
     };
   }

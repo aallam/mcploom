@@ -43,7 +43,11 @@ export class Collector {
         void this.flush();
       }, flushIntervalMs);
       // Don't hold the process open for analytics flushing
-      if (this.flushTimer && typeof this.flushTimer === "object" && "unref" in this.flushTimer) {
+      if (
+        this.flushTimer &&
+        typeof this.flushTimer === "object" &&
+        "unref" in this.flushTimer
+      ) {
         this.flushTimer.unref();
       }
     }
@@ -66,7 +70,13 @@ export class Collector {
     // Update per-tool accumulator
     let acc = this.accumulators.get(event.toolName);
     if (!acc) {
-      acc = { count: 0, errorCount: 0, totalMs: 0, durations: [], lastCalledAt: 0 };
+      acc = {
+        count: 0,
+        errorCount: 0,
+        totalMs: 0,
+        durations: [],
+        lastCalledAt: 0,
+      };
       this.accumulators.set(event.toolName, acc);
     }
     acc.count++;

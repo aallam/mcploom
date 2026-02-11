@@ -3,7 +3,9 @@ import type { ToolCallEvent } from "../types.js";
 /**
  * Console exporter: pretty-prints each batch of events to stdout.
  */
-export function createConsoleExporter(): (events: ToolCallEvent[]) => Promise<void> {
+export function createConsoleExporter(): (
+  events: ToolCallEvent[],
+) => Promise<void> {
   return async (events) => {
     if (events.length === 0) return;
 

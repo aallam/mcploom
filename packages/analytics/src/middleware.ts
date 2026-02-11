@@ -14,21 +14,30 @@ import { byteSize } from "./utils.js";
 /**
  * Checks if a JSON-RPC message is a request (has `id` and `method`).
  */
-function isRequest(msg: JSONRPCMessage): msg is JSONRPCMessage & { id: string | number; method: string; params?: Record<string, unknown> } {
+function isRequest(msg: JSONRPCMessage): msg is JSONRPCMessage & {
+  id: string | number;
+  method: string;
+  params?: Record<string, unknown>;
+} {
   return "id" in msg && "method" in msg;
 }
 
 /**
  * Checks if a JSON-RPC message is a response with a result.
  */
-function isResultResponse(msg: JSONRPCMessage): msg is JSONRPCMessage & { id: string | number; result: unknown } {
+function isResultResponse(
+  msg: JSONRPCMessage,
+): msg is JSONRPCMessage & { id: string | number; result: unknown } {
   return "id" in msg && "result" in msg;
 }
 
 /**
  * Checks if a JSON-RPC message is an error response.
  */
-function isErrorResponse(msg: JSONRPCMessage): msg is JSONRPCMessage & { id: string | number; error: { code: number; message: string } } {
+function isErrorResponse(msg: JSONRPCMessage): msg is JSONRPCMessage & {
+  id: string | number;
+  error: { code: number; message: string };
+} {
   return "id" in msg && "error" in msg;
 }
 
@@ -63,11 +72,17 @@ export function instrumentTransport(
       if (prop === "onmessage" && typeof value === "function") {
         const userHandler = value;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (target as any).onmessage = (message: JSONRPCMessage, extra?: unknown) => {
+        (target as any).onmessage = (
+          message: JSONRPCMessage,
+          extra?: unknown,
+        ) => {
           // Intercept incoming tools/call requests
           if (isRequest(message) && message.method === "tools/call") {
-            if (Math.random() < sampleRate) { // eslint-disable-line sonarjs/pseudo-random -- intentional for perf sampling, not security
-              const params = message.params as { name?: string; arguments?: unknown } | undefined;
+            if (Math.random() < sampleRate) {
+              // eslint-disable-line sonarjs/pseudo-random -- intentional for perf sampling, not security
+              const params = message.params as
+                | { name?: string; arguments?: unknown }
+                | undefined;
               const toolName = params?.name ?? "unknown";
               const inputSize = byteSize(params?.arguments);
               const pendingCall: PendingCall = {
@@ -129,7 +144,8 @@ export function instrumentTransport(
                 outputSize: byteSize(outputPayload),
                 ...(isErrorResponse(message) && {
                   errorMessage,
-                  errorCode: (message as { error: { code: number } }).error.code,
+                  errorCode: (message as { error: { code: number } }).error
+                    .code,
                 }),
                 ...(globalMetadata && { metadata: globalMetadata }),
               };
@@ -141,7 +157,11 @@ export function instrumentTransport(
               }
             }
           }
-          return (target.send as (...args: unknown[]) => unknown).call(target, message, options);
+          return (target.send as (...args: unknown[]) => unknown).call(
+            target,
+            message,
+            options,
+          );
         };
       }
       const value = Reflect.get(target, prop, receiver);
@@ -182,7 +202,9 @@ export function wrapToolHandler<TArgs extends unknown[], TResult>(
     const inputSize = byteSize(args[0]);
 
     // Start a tracing span if enabled
-    const tracingSpan = tracing ? await startToolSpan(toolName, { "mcp.tool.input_size": inputSize }) : undefined;
+    const tracingSpan = tracing
+      ? await startToolSpan(toolName, { "mcp.tool.input_size": inputSize })
+      : undefined;
 
     try {
       // Run handler within span context so downstream calls become children

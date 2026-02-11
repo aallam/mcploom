@@ -31,7 +31,9 @@ async function main() {
       },
     );
     server.tool("db_list", "List database tables", {}, async () => ({
-      content: [{ type: "text" as const, text: "Tables: users, orders, products" }],
+      content: [
+        { type: "text" as const, text: "Tables: users, orders, products" },
+      ],
     }));
     server.tool(
       "db_delete",
@@ -69,7 +71,10 @@ async function main() {
       transform({
         before: (ctx) => {
           // Inject default limit for db_query
-          if (ctx.toolName === "db_query" && ctx.arguments.limit === undefined) {
+          if (
+            ctx.toolName === "db_query" &&
+            ctx.arguments.limit === undefined
+          ) {
             return { ...ctx, arguments: { ...ctx.arguments, limit: 100 } };
           }
           return ctx;
