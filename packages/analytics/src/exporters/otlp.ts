@@ -56,7 +56,7 @@ async function initTracer(config: OtlpConfig): Promise<OtlpTracer> {
     });
 
     const provider = new BasicTracerProvider({
-      spanProcessors: [new SimpleSpanProcessor(otlpExporter as any)],
+      spanProcessors: [new SimpleSpanProcessor(otlpExporter as unknown as import("@opentelemetry/sdk-trace-base").SpanExporter)],
     });
     tracer = provider.getTracer("@gomcp/analytics");
   }

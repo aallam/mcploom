@@ -1,6 +1,24 @@
 # @gomcp/proxy
 
-Lightweight MCP proxy that aggregates multiple [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) servers behind a single endpoint. Route tool calls by name pattern, merge tool lists, and apply middleware.
+A control layer between MCP clients and backends — aggregate multiple [Model Context Protocol](https://modelcontextprotocol.io/) servers behind a single endpoint with routing, middleware, and caching.
+
+## Why use a proxy?
+
+MCP clients like Claude Desktop and Cursor already support connecting to multiple MCP servers natively. For personal use, just add your servers directly — no proxy needed.
+
+The proxy is for **production apps and custom integrations** where you need a programmable layer between clients and backends: routing, filtering, caching, transforms, and centralized control over which tools are exposed and how they behave.
+
+## When to use this
+
+- **You're building a custom MCP-powered app** — connect to one proxy instead of managing N backend connections
+- **You need middleware** — block dangerous tools, cache expensive calls, transform inputs/outputs
+- **Multi-tenant deployments** — centralized security policies, shared cache, swap backends without touching clients
+- **Stdio-to-HTTP bridge** — expose local stdio-only MCP servers as remote HTTP endpoints
+
+## When you don't need this
+
+- **Personal use with Claude Desktop / Cursor** — add your MCP servers directly in the client config
+- **Simple setups with 1-2 servers** — no middleware or routing needs, just connect directly
 
 ## Features
 
@@ -50,6 +68,24 @@ const server = await proxy.listen({ port: 3000 });
 await proxy.connect();
 const mcpServer = proxy.createServer();
 await mcpServer.connect(someTransport);
+```
+
+### Stdio-to-HTTP Bridge
+
+Expose a local stdio-only MCP server as a remote HTTP endpoint:
+
+```typescript
+import { McpProxy } from "@gomcp/proxy";
+
+const proxy = new McpProxy({
+  servers: {
+    postgres: { command: "npx", args: ["@mcp/postgres-server"] },
+  },
+  routing: [{ pattern: "*", server: "postgres" }],
+});
+
+await proxy.listen({ port: 3000 });
+// stdio server now accessible at http://localhost:3000/mcp
 ```
 
 ## API

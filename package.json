@@ -1,6 +1,7 @@
 {
   "name": "mcp-tools",
   "private": true,
+  "type": "module",
   "workspaces": [
     "packages/*"
   ],
@@ -8,16 +9,21 @@
     "build": "npm run build --workspaces",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint packages/*/src/**/*.ts",
+    "lint": "eslint .",
     "format": "prettier --write packages/*/src/**/*.ts",
     "format:check": "prettier --check packages/*/src/**/*.ts",
     "clean": "rm -rf packages/*/dist"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.8",
     "@types/node": "^22.0.0",
     "eslint": "^9.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-sonarjs": "^3.0.7",
     "prettier": "^3.0.0",
+    "tsx": "^4.0.0",
     "typescript": "^5.7.0",
+    "typescript-eslint": "^8.55.0",
     "vitest": "^3.0.0"
   }
 }

@@ -10,7 +10,8 @@ export function createConsoleExporter(): (events: ToolCallEvent[]) => Promise<vo
     const lines: string[] = ["[McpAnalytics] Flushing batch:"];
 
     for (const e of events) {
-      const status = e.success ? "OK" : `ERR${e.errorCode ? ` (${e.errorCode})` : ""}`;
+      const errorSuffix = e.errorCode ? ` (${e.errorCode})` : "";
+      const status = e.success ? "OK" : `ERR${errorSuffix}`;
       const meta = e.sessionId ? ` session=${e.sessionId}` : "";
       lines.push(
         `  ${e.toolName} ${status} ${e.durationMs}ms in=${e.inputSize}B out=${e.outputSize}B${meta}`,

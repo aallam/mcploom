@@ -1,5 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { z } from "zod";
 
 import { aggregateTools } from "./aggregator.js";
 import { executeMiddlewareChain } from "./middleware.js";
@@ -121,14 +122,21 @@ export class McpProxy {
       version: this.config.version ?? "1.0.0",
     });
 
-    // Register all aggregated tools on the proxy server
+    // Register all aggregated tools on the proxy server.
+    // Build a permissive Zod schema so the SDK routes arguments to the handler
+    // without rejecting anything — the backend does the real validation.
     for (const tool of this.toolIndex.values()) {
+      const shape: Record<string, z.ZodTypeAny> = {};
+      if (tool.inputSchema.properties) {
+        for (const key of Object.keys(tool.inputSchema.properties as Record<string, unknown>)) {
+          shape[key] = z.any().optional();
+        }
+      }
+
       server.tool(
         tool.name,
         tool.description ?? "",
-        tool.inputSchema.properties
-          ? (tool.inputSchema.properties as Record<string, unknown>)
-          : {},
+        shape,
         async (args: Record<string, unknown>) => {
           const result = await this.callTool(tool.name, args);
           return {
@@ -162,12 +170,12 @@ export class McpProxy {
       const url = new URL(req.url ?? "/", `http://localhost:${opts.port}`);
 
       if (url.pathname === "/mcp" && req.method === "POST") {
-        // Read request body
+        // Read and parse request body
         const chunks: Buffer[] = [];
         for await (const chunk of req) {
           chunks.push(chunk as Buffer);
         }
-        const body = Buffer.concat(chunks).toString("utf-8");
+        const body = JSON.parse(Buffer.concat(chunks).toString("utf-8"));
         const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
         let transport = sessionId ? sessions.get(sessionId) : undefined;
@@ -190,6 +198,17 @@ export class McpProxy {
 
         if (transport) {
           await transport.handleRequest(req, res);
+        } else {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ error: "No session found" }));
+        }
+      } else if (url.pathname === "/mcp" && req.method === "DELETE") {
+        const sessionId = req.headers["mcp-session-id"] as string | undefined;
+        const transport = sessionId ? sessions.get(sessionId) : undefined;
+
+        if (transport) {
+          await transport.handleRequest(req, res);
+          sessions.delete(sessionId!);
         } else {
           res.writeHead(400, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ error: "No session found" }));
