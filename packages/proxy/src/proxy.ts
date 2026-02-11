@@ -133,6 +133,7 @@ export class McpProxy {
         }
       }
 
+      // eslint-disable-next-line sonarjs/deprecation -- server.tool() is the current SDK API
       server.tool(
         tool.name,
         tool.description ?? "",
@@ -166,6 +167,7 @@ export class McpProxy {
 
     const sessions = new Map<string, StreamableHTTPServerTransport>();
 
+    // eslint-disable-next-line sonarjs/cognitive-complexity -- HTTP handler requires inherent branching
     const httpServer = createServer(async (req, res) => {
       const url = new URL(req.url ?? "/", `http://localhost:${opts.port}`);
 

@@ -58,6 +58,7 @@ export function instrumentTransport(
   // We need to intercept onmessage being set (since the server sets it after we wrap)
   // The pattern: wrap the transport so that when server sets onmessage, we inject our interceptor
   const proxy = new Proxy(transport, {
+    // eslint-disable-next-line sonarjs/no-invariant-returns -- Proxy set traps must always return true
     set(target, prop, value) {
       if (prop === "onmessage" && typeof value === "function") {
         const userHandler = value;
@@ -65,7 +66,7 @@ export function instrumentTransport(
         (target as any).onmessage = (message: JSONRPCMessage, extra?: unknown) => {
           // Intercept incoming tools/call requests
           if (isRequest(message) && message.method === "tools/call") {
-            if (Math.random() < sampleRate) {
+            if (Math.random() < sampleRate) { // eslint-disable-line sonarjs/pseudo-random -- intentional for perf sampling, not security
               const params = message.params as { name?: string; arguments?: unknown } | undefined;
               const toolName = params?.name ?? "unknown";
               const inputSize = byteSize(params?.arguments);
@@ -111,6 +112,13 @@ export function instrumentTransport(
                 ? (message as { error: { message: string } }).error.message
                 : undefined;
 
+              let outputPayload: unknown;
+              if (isResultResponse(message)) {
+                outputPayload = (message as { result: unknown }).result;
+              } else if (isErrorResponse(message)) {
+                outputPayload = (message as { error: unknown }).error;
+              }
+
               const event: ToolCallEvent = {
                 toolName: call.toolName,
                 sessionId: target.sessionId,
@@ -118,13 +126,7 @@ export function instrumentTransport(
                 durationMs: Date.now() - call.startTime,
                 success,
                 inputSize: call.inputSize,
-                outputSize: byteSize(
-                  isResultResponse(message)
-                    ? (message as { result: unknown }).result
-                    : isErrorResponse(message)
-                      ? (message as { error: unknown }).error
-                      : undefined,
-                ),
+                outputSize: byteSize(outputPayload),
                 ...(isErrorResponse(message) && {
                   errorMessage,
                   errorCode: (message as { error: { code: number } }).error.code,
@@ -139,7 +141,7 @@ export function instrumentTransport(
               }
             }
           }
-          return (target.send as Function).call(target, message, options);
+          return (target.send as (...args: unknown[]) => unknown).call(target, message, options);
         };
       }
       const value = Reflect.get(target, prop, receiver);
@@ -171,7 +173,7 @@ export function wrapToolHandler<TArgs extends unknown[], TResult>(
   tracing?: boolean,
 ): (...args: TArgs) => Promise<TResult> {
   return async (...args: TArgs) => {
-    const shouldSample = Math.random() < sampleRate;
+    const shouldSample = Math.random() < sampleRate; // eslint-disable-line sonarjs/pseudo-random -- intentional for perf sampling, not security
     if (!shouldSample) {
       return handler(...args);
     }

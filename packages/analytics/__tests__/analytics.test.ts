@@ -1,3 +1,4 @@
+import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { describe, it, expect, vi } from "vitest";
 
 import { McpAnalytics } from "../src";
@@ -102,7 +103,7 @@ describe("McpAnalytics", () => {
       onerror: undefined,
     };
 
-    const instrumented = analytics.instrument(transport as any);
+    const instrumented = analytics.instrument(transport as unknown as Transport);
     expect(instrumented).toBeDefined();
     // The proxy should still expose transport methods
     expect(typeof instrumented.start).toBe("function");

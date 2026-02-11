@@ -16,9 +16,7 @@ interface OtelSpan {
   end(): void;
 }
 
-interface OtelContext {
-  // opaque context value
-}
+type OtelContext = Record<string, unknown>;
 
 interface OtelApi {
   trace: {

@@ -1,5 +1,3 @@
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-
 /**
  * Configuration for a remote MCP backend (Streamable HTTP).
  */
