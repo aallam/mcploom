@@ -50,6 +50,24 @@ describe("filter middleware", () => {
     const result = await mw(makeCtx("search"), async () => okResult);
     expect(result).toEqual(okResult);
   });
+
+  it("supports glob patterns in deny list", async () => {
+    const mw = filter({ deny: ["admin_*"] });
+    const blocked = await mw(makeCtx("admin_delete"), async () => okResult);
+    const allowed = await mw(makeCtx("user_search"), async () => okResult);
+
+    expect(blocked.isError).toBe(true);
+    expect(allowed).toEqual(okResult);
+  });
+
+  it("supports glob patterns in allow list", async () => {
+    const mw = filter({ allow: ["*_search"] });
+    const allowed = await mw(makeCtx("user_search"), async () => okResult);
+    const blocked = await mw(makeCtx("admin_delete"), async () => okResult);
+
+    expect(allowed).toEqual(okResult);
+    expect(blocked.isError).toBe(true);
+  });
 });
 
 describe("cache middleware", () => {
@@ -91,6 +109,48 @@ describe("cache middleware", () => {
     await mw(makeCtx("tool_a"), handler);
 
     expect(handler).toHaveBeenCalledTimes(3);
+  });
+
+  it("uses stable cache keys for reordered top-level argument keys", async () => {
+    const mw = cache({ ttl: 60 });
+    const handler = vi.fn().mockResolvedValue(okResult);
+
+    const ctxA: MiddlewareContext = {
+      toolName: "search",
+      arguments: { a: 1, b: 2 },
+      server: "backend",
+    };
+    const ctxB: MiddlewareContext = {
+      toolName: "search",
+      arguments: { b: 2, a: 1 },
+      server: "backend",
+    };
+
+    await mw(ctxA, handler);
+    await mw(ctxB, handler);
+
+    expect(handler).toHaveBeenCalledOnce();
+  });
+
+  it("uses stable cache keys for reordered nested argument keys", async () => {
+    const mw = cache({ ttl: 60 });
+    const handler = vi.fn().mockResolvedValue(okResult);
+
+    const ctxA: MiddlewareContext = {
+      toolName: "search",
+      arguments: { filter: { z: 1, a: 2 }, q: "books" },
+      server: "backend",
+    };
+    const ctxB: MiddlewareContext = {
+      toolName: "search",
+      arguments: { q: "books", filter: { a: 2, z: 1 } },
+      server: "backend",
+    };
+
+    await mw(ctxA, handler);
+    await mw(ctxB, handler);
+
+    expect(handler).toHaveBeenCalledOnce();
   });
 });
 

@@ -1,10 +1,34 @@
 import { MemoryCacheStore } from "./cache-store.js";
+import { globToRegex } from "./router.js";
 import type {
   CacheStore,
   MiddlewareContext,
   MiddlewareResult,
   ProxyMiddleware,
 } from "./types.js";
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Object.prototype.toString.call(value) === "[object Object]";
+}
+
+function normalizeForCacheKey(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(normalizeForCacheKey);
+  }
+  if (isPlainObject(value)) {
+    const normalized: Record<string, unknown> = {};
+    const entries = Object.entries(value).sort(([a], [b]) => a.localeCompare(b));
+    for (const [key, entryValue] of entries) {
+      normalized[key] = normalizeForCacheKey(entryValue);
+    }
+    return normalized;
+  }
+  return value;
+}
+
+function stableStringify(value: unknown): string {
+  return JSON.stringify(normalizeForCacheKey(value));
+}
 
 /**
  * Creates a filter middleware that blocks/allows specific tools.
@@ -13,8 +37,11 @@ export function filter(opts: {
   allow?: string[];
   deny?: string[];
 }): ProxyMiddleware {
+  const denyPatterns = (opts.deny ?? []).map(globToRegex);
+  const allowPatterns = opts.allow?.map(globToRegex);
+
   return async (ctx, next) => {
-    if (opts.deny?.includes(ctx.toolName)) {
+    if (denyPatterns.some((pattern) => pattern.test(ctx.toolName))) {
       return {
         content: [
           {
@@ -25,7 +52,7 @@ export function filter(opts: {
         isError: true,
       };
     }
-    if (opts.allow && !opts.allow.includes(ctx.toolName)) {
+    if (allowPatterns && !allowPatterns.some((pattern) => pattern.test(ctx.toolName))) {
       return {
         content: [
           { type: "text", text: `Tool "${ctx.toolName}" is not in allow list` },
@@ -48,7 +75,7 @@ export function cache(opts: {
   const store = opts.store ?? new MemoryCacheStore({ maxSize: opts.maxSize });
 
   return async (ctx, next) => {
-    const key = JSON.stringify({ tool: ctx.toolName, args: ctx.arguments });
+    const key = stableStringify({ tool: ctx.toolName, args: ctx.arguments });
     const cached = await store.get(key);
 
     if (cached !== undefined) {

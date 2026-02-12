@@ -4,7 +4,7 @@ import type { RoutingRule } from "./types.js";
  * Converts a simple glob pattern to a regex.
  * Supports * (any chars) and ? (single char).
  */
-function globToRegex(pattern: string): RegExp {
+export function globToRegex(pattern: string): RegExp {
   const escaped = pattern
     .replace(/[.+^${}()|[\]\\]/g, String.raw`\$&`)
     .replaceAll("*", ".*")

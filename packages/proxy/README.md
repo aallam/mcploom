@@ -145,6 +145,8 @@ Returns the merged list of tools from all backends.
 ### `proxy.callTool(toolName, args)`
 
 Route a tool call to the appropriate backend, applying middleware.
+If the backend throws, the proxy returns a structured MCP error result
+(`isError: true`) instead of throwing.
 
 ### `proxy.createServer()`
 
@@ -153,6 +155,13 @@ Create an `McpServer` instance with all aggregated tools registered. Useful for 
 ### `proxy.listen({ port })`
 
 Start a Streamable HTTP server. Returns `{ close: () => Promise<void> }`.
+
+Behavior details:
+
+- Invalid JSON request bodies return `400`.
+- Request bodies larger than 4MB return `413`.
+- Unexpected request handler failures return `500`.
+- Sessions are removed automatically when their transport closes.
 
 ### `proxy.getBackends()`
 
@@ -168,16 +177,20 @@ Middleware follows a `(ctx, next) => result` pattern. They execute in order, wra
 
 ### `filter({ allow?, deny? })`
 
-Block or allow specific tools:
+Block or allow specific tools. `allow` and `deny` entries support glob
+patterns (`*` and `?`), using the same matching behavior as routing rules.
 
 ```typescript
 filter({ deny: ["dangerous_tool", "admin_delete"] })
+filter({ deny: ["admin_*"] })
 filter({ allow: ["search", "browse", "list"] })
+filter({ allow: ["*_search"] })
 ```
 
 ### `cache({ ttl, maxSize? })`
 
-Cache successful tool responses:
+Cache successful tool responses. Cache keys are deterministic even when
+argument object key order differs.
 
 ```typescript
 cache({ ttl: 300, maxSize: 1000 })  // 5 minute TTL, 1000 entries max
