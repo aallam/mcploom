@@ -1,6 +1,6 @@
 {
   "name": "@gomcp/analytics",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Lightweight analytics and observability for MCP servers",
   "type": "module",
   "main": "./dist/index.js",
