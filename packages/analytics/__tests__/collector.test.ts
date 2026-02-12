@@ -76,6 +76,52 @@ describe("Collector", () => {
     expect(stats.tools["fetch"]!.count).toBe(1);
   });
 
+  it("tracks per-session aggregates and top sessions", () => {
+    collector.record(
+      makeEvent({ toolName: "search", durationMs: 80, sessionId: "s1" }),
+    );
+    collector.record(
+      makeEvent({
+        toolName: "search",
+        durationMs: 120,
+        success: false,
+        sessionId: "s1",
+      }),
+    );
+    collector.record(
+      makeEvent({ toolName: "fetch", durationMs: 150, sessionId: "s2" }),
+    );
+
+    const s1 = collector.getSessionStats("s1");
+    expect(s1).toBeDefined();
+    expect(s1!.count).toBe(2);
+    expect(s1!.errorCount).toBe(1);
+    expect(s1!.tools.search!.count).toBe(2);
+
+    const snapshot = collector.getStats();
+    expect(Object.keys(snapshot.sessions)).toEqual(["s1", "s2"]);
+
+    const top = collector.getTopSessions(1);
+    expect(top).toHaveLength(1);
+    expect(top[0]!.sessionId).toBe("s1");
+  });
+
+  it("keeps percentile memory bounded by toolWindowSize", () => {
+    const bounded = new Collector(10_000, exporter, 0, { toolWindowSize: 3 });
+    bounded.record(makeEvent({ durationMs: 10 }));
+    bounded.record(makeEvent({ durationMs: 20 }));
+    bounded.record(makeEvent({ durationMs: 30 }));
+    bounded.record(makeEvent({ durationMs: 40 }));
+    bounded.record(makeEvent({ durationMs: 50 }));
+
+    const stats = bounded.getToolStats("test_tool");
+    expect(stats).toBeDefined();
+    expect(stats!.count).toBe(5);
+    expect(stats!.avgMs).toBe(30);
+    // p50 should reflect the bounded recent window [30, 40, 50]
+    expect(stats!.p50Ms).toBe(40);
+  });
+
   it("flushes pending events to exporter", async () => {
     collector.record(makeEvent());
     collector.record(makeEvent());
@@ -87,6 +133,64 @@ describe("Collector", () => {
     // Second flush should not call exporter (no new events)
     await collector.flush();
     expect(exporter).toHaveBeenCalledOnce();
+  });
+
+  it("re-queues events when exporter flush fails", async () => {
+    const localExporter = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("transient failure"))
+      .mockResolvedValue(undefined);
+    const retrying = new Collector(10_000, localExporter, 0);
+
+    retrying.record(makeEvent());
+    retrying.record(makeEvent({ toolName: "other" }));
+
+    await expect(retrying.flush()).rejects.toThrow("transient failure");
+    expect(localExporter).toHaveBeenCalledTimes(1);
+
+    await retrying.flush();
+    expect(localExporter).toHaveBeenCalledTimes(2);
+    expect(localExporter.mock.calls[1]![0]).toHaveLength(2);
+  });
+
+  it("does not run concurrent flush exports in parallel", async () => {
+    let resolveExport: (() => void) | undefined;
+    const blocker = new Promise<void>((resolve) => {
+      resolveExport = resolve;
+    });
+    const blockingExporter = vi.fn().mockImplementation(async () => {
+      await blocker;
+    });
+    const locked = new Collector(10_000, blockingExporter, 0);
+    locked.record(makeEvent());
+
+    const first = locked.flush();
+    const second = locked.flush();
+    expect(blockingExporter).toHaveBeenCalledTimes(1);
+
+    resolveExport?.();
+    await Promise.all([first, second]);
+    expect(blockingExporter).toHaveBeenCalledTimes(1);
+  });
+
+  it("handles timer flush failures without dropping events", async () => {
+    vi.useFakeTimers();
+    const onFlushError = vi.fn();
+    const timedExporter = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("boom"))
+      .mockResolvedValue(undefined);
+    const timed = new Collector(10_000, timedExporter, 10, {
+      onFlushError,
+    });
+
+    timed.record(makeEvent());
+    await vi.advanceTimersByTimeAsync(20);
+
+    expect(onFlushError).toHaveBeenCalledOnce();
+    await timed.destroy();
+    expect(timedExporter).toHaveBeenCalledTimes(2);
+    vi.useRealTimers();
   });
 
   it("reset clears all data", () => {

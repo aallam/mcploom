@@ -140,6 +140,140 @@ describe("instrumentTransport", () => {
     await proxy.close();
     expect(transport.close).toHaveBeenCalled();
   });
+
+  it("samples consistently per session when strategy is per_session", async () => {
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.2);
+    const transport = makeTransport();
+    const proxy = instrumentTransport(
+      transport,
+      collector,
+      0.5,
+      undefined,
+      false,
+      "per_session",
+    );
+
+    proxy.onmessage = vi.fn();
+
+    proxy.onmessage!({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "tools/call",
+      params: { name: "search", arguments: {} },
+    });
+    await proxy.send({
+      jsonrpc: "2.0",
+      id: 1,
+      result: { content: [] },
+    });
+
+    proxy.onmessage!({
+      jsonrpc: "2.0",
+      id: 2,
+      method: "tools/call",
+      params: { name: "search", arguments: {} },
+    });
+    await proxy.send({
+      jsonrpc: "2.0",
+      id: 2,
+      result: { content: [] },
+    });
+
+    expect(collector.getStats().totalCalls).toBe(2);
+    expect(randomSpy).toHaveBeenCalledTimes(1);
+    randomSpy.mockRestore();
+  });
+
+  it("ends tracing span even when response arrives before span initialization", async () => {
+    const transport = makeTransport();
+    const mockSpan = {
+      setAttribute: vi.fn(),
+      setStatus: vi.fn(),
+      end: vi.fn(),
+    };
+    const mockTracingSpan = { span: mockSpan, context: {} };
+    let resolveSpan: ((value: typeof mockTracingSpan) => void) | undefined;
+
+    vi.spyOn(tracing, "startToolSpan").mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveSpan =
+            resolve as (value: typeof mockTracingSpan | undefined) => void;
+        }),
+    );
+    const endSpy = vi.spyOn(tracing, "endToolSpan").mockImplementation(() => {});
+
+    const proxy = instrumentTransport(
+      transport,
+      collector,
+      1.0,
+      undefined,
+      true,
+    );
+    proxy.onmessage = vi.fn();
+
+    proxy.onmessage!({
+      jsonrpc: "2.0",
+      id: 10,
+      method: "tools/call",
+      params: { name: "search", arguments: {} },
+    });
+
+    await proxy.send({
+      jsonrpc: "2.0",
+      id: 10,
+      result: { content: [] },
+    });
+
+    resolveSpan?.(mockTracingSpan);
+    await new Promise((resolve) => {
+      setTimeout(resolve, 0);
+    });
+
+    expect(endSpy).toHaveBeenCalledWith(mockTracingSpan, true, undefined);
+  });
+
+  it("cleans pending calls when transport closes", async () => {
+    const transport = makeTransport();
+    const mockSpan = {
+      setAttribute: vi.fn(),
+      setStatus: vi.fn(),
+      end: vi.fn(),
+    };
+    const mockTracingSpan = { span: mockSpan, context: {} };
+
+    vi.spyOn(tracing, "startToolSpan").mockResolvedValue(mockTracingSpan);
+    const endSpy = vi.spyOn(tracing, "endToolSpan").mockImplementation(() => {});
+
+    const proxy = instrumentTransport(
+      transport,
+      collector,
+      1.0,
+      undefined,
+      true,
+    );
+
+    const onClose = vi.fn();
+    proxy.onmessage = vi.fn();
+    proxy.onclose = onClose;
+    proxy.onmessage!({
+      jsonrpc: "2.0",
+      id: 99,
+      method: "tools/call",
+      params: { name: "search", arguments: {} },
+    });
+
+    // Allow async span init to resolve.
+    await Promise.resolve();
+    proxy.onclose?.();
+
+    expect(onClose).toHaveBeenCalled();
+    expect(endSpy).toHaveBeenCalledWith(
+      mockTracingSpan,
+      false,
+      "Transport closed before tool response",
+    );
+  });
 });
 
 describe("wrapToolHandler", () => {

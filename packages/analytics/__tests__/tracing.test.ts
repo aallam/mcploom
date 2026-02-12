@@ -12,10 +12,12 @@ const mockTracer = {
 };
 
 const mockContext = { _type: "mock-context" };
+const mockSpanContext = { _type: "span-context" };
 
 vi.mock("@opentelemetry/api", () => ({
   trace: {
     getTracer: vi.fn().mockReturnValue(mockTracer),
+    setSpan: vi.fn().mockReturnValue(mockSpanContext),
   },
   context: {
     active: vi.fn().mockReturnValue(mockContext),
@@ -62,7 +64,7 @@ describe("tracing helpers", () => {
 
       expect(result).toEqual({
         span: mockSpan,
-        context: mockContext,
+        context: mockSpanContext,
       });
     });
   });

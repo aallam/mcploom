@@ -39,6 +39,10 @@ describe("McpAnalytics", () => {
     const stats = analytics.getToolStats("my_tool");
     expect(stats).toBeDefined();
     expect(stats!.count).toBe(1);
+
+    const unknownSession = analytics.getSessionStats("unknown");
+    expect(unknownSession).toBeDefined();
+    expect(unknownSession!.count).toBe(1);
   });
 
   it("track() uses function name as fallback", async () => {
@@ -110,5 +114,23 @@ describe("McpAnalytics", () => {
     // The proxy should still expose transport methods
     expect(typeof instrumented.start).toBe("function");
     expect(typeof instrumented.send).toBe("function");
+  });
+
+  it("returns top sessions by call volume", async () => {
+    const analytics = new McpAnalytics({
+      exporter: async () => {},
+      flushIntervalMs: 0,
+    });
+
+    const trackA = analytics.track(async () => ({ content: [] }), "a");
+    const trackB = analytics.track(async () => ({ content: [] }), "b");
+
+    await trackA({});
+    await trackB({});
+
+    const top = analytics.getTopSessions(1);
+    expect(top).toHaveLength(1);
+    expect(top[0]!.sessionId).toBe("unknown");
+    expect(top[0]!.stats.count).toBe(2);
   });
 });

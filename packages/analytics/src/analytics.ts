@@ -11,6 +11,8 @@ import type {
   AnalyticsSnapshot,
   ExporterFn,
   InstrumentedTransport,
+  SessionStats,
+  SamplingStrategy,
   ToolStats,
 } from "./types.js";
 
@@ -40,17 +42,22 @@ export class McpAnalytics {
   private readonly sampleRate: number;
   private readonly metadata?: Record<string, string>;
   private readonly tracing: boolean;
+  private readonly samplingStrategy: SamplingStrategy;
 
   constructor(config: AnalyticsConfig) {
     this.sampleRate = config.sampleRate ?? 1;
     this.metadata = config.metadata;
     this.tracing = config.tracing ?? false;
+    this.samplingStrategy = config.samplingStrategy ?? "per_call";
 
     const exporter = this.resolveExporter(config);
     this.collector = new Collector(
       config.maxBufferSize ?? 10_000,
       exporter,
       config.flushIntervalMs ?? 5_000,
+      {
+        toolWindowSize: config.toolWindowSize,
+      },
     );
   }
 
@@ -65,6 +72,7 @@ export class McpAnalytics {
       this.sampleRate,
       this.metadata,
       this.tracing,
+      this.samplingStrategy,
     );
   }
 
@@ -105,6 +113,22 @@ export class McpAnalytics {
    */
   getToolStats(toolName: string): ToolStats | undefined {
     return this.collector.getToolStats(toolName);
+  }
+
+  /**
+   * Get stats for a specific session.
+   */
+  getSessionStats(sessionId: string): SessionStats | undefined {
+    return this.collector.getSessionStats(sessionId);
+  }
+
+  /**
+   * Get top sessions ranked by total call count.
+   */
+  getTopSessions(
+    limit = 10,
+  ): Array<{ sessionId: string; stats: SessionStats }> {
+    return this.collector.getTopSessions(limit);
   }
 
   /**

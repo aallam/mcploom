@@ -6,6 +6,8 @@ export type {
   InstrumentedTransport,
   JsonConfig,
   OtlpConfig,
+  SamplingStrategy,
+  SessionStats,
   ToolCallEvent,
   ToolStats,
 } from "./types.js";

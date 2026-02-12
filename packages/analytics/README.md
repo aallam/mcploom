@@ -8,7 +8,9 @@ Lightweight analytics and observability for [Model Context Protocol](https://mod
 - **Handler wrapping** — instrument individual tool handlers for granular control
 - **Multiple exporters** — console, JSON file, OpenTelemetry OTLP, or custom functions
 - **In-memory stats** — p50/p95/p99 latencies, error rates, call counts per tool
+- **Session analytics** — aggregated metrics per `sessionId` with top-session ranking
 - **Sampling** — configurable sample rate to control overhead
+- **Bounded percentile memory** — keeps a fixed recent latency window per accumulator
 - **Zero required deps** — only `@modelcontextprotocol/sdk` as a peer dependency
 
 ## Installation
@@ -60,6 +62,8 @@ Create an analytics instance.
 | `flushIntervalMs` | `number`                                                 | `5000`  | How often to flush events to the exporter                 |
 | `maxBufferSize`   | `number`                                                 | `10000` | Max events in the ring buffer                             |
 | `metadata`        | `Record<string, string>`                                 | —       | Metadata added to every event                             |
+| `samplingStrategy`| `"per_call" \| "per_session"`                            | `"per_call"` | Sampling behavior for transport instrumentation         |
+| `toolWindowSize`  | `number`                                                 | `2048`  | Recent durations kept per accumulator for percentiles     |
 | `tracing`         | `boolean`                                                | `false` | Create OpenTelemetry spans via the global tracer provider |
 
 ### `analytics.instrument(transport)`
@@ -92,6 +96,7 @@ interface AnalyticsSnapshot {
   errorRate: number;
   uptimeMs: number;
   tools: Record<string, ToolStats>;
+  sessions: Record<string, SessionStats>;
 }
 
 interface ToolStats {
@@ -104,11 +109,28 @@ interface ToolStats {
   avgMs: number;
   lastCalledAt: number;  // Unix timestamp ms
 }
+
+interface SessionStats {
+  count: number;
+  errorCount: number;
+  errorRate: number;
+  avgMs: number;
+  lastCalledAt: number;  // Unix timestamp ms
+  tools: Record<string, ToolStats>;
+}
 ```
 
 ### `analytics.getToolStats(toolName)`
 
 Get stats for a specific tool. Returns `undefined` if the tool hasn't been called.
+
+### `analytics.getSessionStats(sessionId)`
+
+Get stats for a specific session. Returns `undefined` if the session hasn't been observed.
+
+### `analytics.getTopSessions(limit?)`
+
+Returns sessions ordered by call count (descending). Default `limit` is `10`.
 
 ### `analytics.flush()`
 
@@ -121,6 +143,17 @@ Clear all collected data.
 ### `analytics.shutdown()`
 
 Stop the flush timer and flush remaining events. Call this on process exit.
+
+## Reliability Semantics
+
+- Flush failures do not drop events. Failed batches are re-queued and retried on the next flush.
+- Periodic flush errors are handled internally (they are reported, but they do not crash the process).
+- Percentile memory is bounded via `toolWindowSize` (recent-window percentile calculation).
+
+## Migration Note
+
+- `otlp.useGlobalProvider` has been removed. The OTLP exporter now always uses its own OTLP provider.  
+  If you want spans in your app's global tracer context, use `tracing: true`.
 
 ## Exporters
 
@@ -161,6 +194,8 @@ new McpAnalytics({
 });
 ```
 
+Note: OTLP export emits synthetic spans derived from collected tool-call events.
+
 ### Custom Function
 
 Provide your own export function:
@@ -198,20 +233,6 @@ await server.connect(tracked);
 This works with any OTel-compatible provider (Datadog, New Relic, Honeycomb, etc.). The `tracing` flag dynamically imports `@opentelemetry/api` and uses the global tracer — no OTLP exporter setup needed.
 
 When using `analytics.track()` (handler wrapping), the handler executes inside the span context, so any downstream OTel-instrumented calls (HTTP, DB, etc.) become children of the MCP tool span.
-
-### OTLP exporter with global provider
-
-If you're already using the OTLP exporter and want it to send spans through your global provider instead of creating an isolated one:
-
-```typescript
-new McpAnalytics({
-  exporter: "otlp",
-  otlp: {
-    endpoint: "unused-when-global", // ignored when useGlobalProvider is true
-    useGlobalProvider: true,
-  },
-});
-```
 
 ### Span attributes
 

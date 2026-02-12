@@ -8,7 +8,11 @@ import {
   withSpanContext,
   type TracingSpan,
 } from "./tracing.js";
-import type { ToolCallEvent, InstrumentedTransport } from "./types.js";
+import type {
+  ToolCallEvent,
+  InstrumentedTransport,
+  SamplingStrategy,
+} from "./types.js";
 import { byteSize } from "./utils.js";
 
 /**
@@ -46,6 +50,7 @@ interface PendingCall {
   startTime: number;
   inputSize: number;
   tracing?: TracingSpan;
+  tracingInit?: Promise<TracingSpan | undefined>;
 }
 
 /**
@@ -58,11 +63,57 @@ export function instrumentTransport(
   sampleRate: number,
   globalMetadata?: Record<string, string>,
   tracing?: boolean,
+  samplingStrategy: SamplingStrategy = "per_call",
 ): InstrumentedTransport {
   const pending = new Map<string | number, PendingCall>();
+  const sessionSamplingDecisions = new Map<string, boolean>();
 
   // Intercept incoming messages (requests from client)
   const origOnMessage = transport.onmessage;
+  const origOnClose = transport.onclose;
+
+  const sampleForSession = (sessionKey: string): boolean => {
+    if (samplingStrategy !== "per_session") {
+      // eslint-disable-next-line sonarjs/pseudo-random -- intentional for perf sampling, not security
+      return Math.random() < sampleRate;
+    }
+    const cached = sessionSamplingDecisions.get(sessionKey);
+    if (cached !== undefined) return cached;
+    // eslint-disable-next-line sonarjs/pseudo-random -- intentional for perf sampling, not security
+    const decision = Math.random() < sampleRate;
+    sessionSamplingDecisions.set(sessionKey, decision);
+    return decision;
+  };
+
+  const closePendingCall = (
+    call: PendingCall,
+    success: boolean,
+    errorMessage?: string,
+  ) => {
+    if (call.tracing) {
+      endToolSpan(call.tracing, success, errorMessage);
+      return;
+    }
+    if (call.tracingInit) {
+      void call.tracingInit
+        .then((span) => {
+          if (span) {
+            endToolSpan(span, success, errorMessage);
+          }
+        })
+        .catch(() => {
+          // ignore tracing init failures
+        });
+    }
+  };
+
+  const cleanupPendingCalls = (reason: string) => {
+    for (const call of pending.values()) {
+      closePendingCall(call, false, reason);
+    }
+    pending.clear();
+    sessionSamplingDecisions.clear();
+  };
 
   // We need to intercept onmessage being set (since the server sets it after we wrap)
   // The pattern: wrap the transport so that when server sets onmessage, we inject our interceptor
@@ -78,8 +129,8 @@ export function instrumentTransport(
         ) => {
           // Intercept incoming tools/call requests
           if (isRequest(message) && message.method === "tools/call") {
-            // eslint-disable-next-line sonarjs/pseudo-random -- intentional for perf sampling, not security
-            if (Math.random() < sampleRate) {
+            const sessionKey = target.sessionId ?? "unknown";
+            if (sampleForSession(sessionKey)) {
               const params = message.params as
                 | { name?: string; arguments?: unknown }
                 | undefined;
@@ -90,22 +141,32 @@ export function instrumentTransport(
                 startTime: Date.now(),
                 inputSize,
               };
-              pending.set(message.id, pendingCall);
 
-              // Start a tracing span (async, fire-and-forget into the pending map)
+              // Start span initialization and keep a promise to avoid race with fast responses.
               if (tracing) {
-                startToolSpan(toolName, {
+                pendingCall.tracingInit = startToolSpan(toolName, {
                   "mcp.tool.input_size": inputSize,
-                }).then((span) => {
-                  const entry = pending.get(message.id);
-                  if (entry && span) {
-                    entry.tracing = span;
-                  }
-                });
+                })
+                  .then((span) => {
+                    pendingCall.tracing = span;
+                    return span;
+                  })
+                  .catch(() => undefined);
               }
+
+              pending.set(message.id, pendingCall);
             }
           }
           userHandler(message, extra);
+        };
+        return true;
+      }
+      if (prop === "onclose" && typeof value === "function") {
+        const userOnClose = value;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (target as any).onclose = (...args: unknown[]) => {
+          cleanupPendingCalls("Transport closed before tool response");
+          userOnClose(...args);
         };
         return true;
       }
@@ -152,9 +213,7 @@ export function instrumentTransport(
               collector.record(event);
 
               // End the tracing span
-              if (call.tracing) {
-                endToolSpan(call.tracing, success, errorMessage);
-              }
+              closePendingCall(call, success, errorMessage);
             }
           }
           return (target.send as (...args: unknown[]) => unknown).call(
@@ -162,6 +221,17 @@ export function instrumentTransport(
             message,
             options,
           );
+        };
+      }
+      if (prop === "close") {
+        return async (...args: unknown[]) => {
+          try {
+            return await (target.close as (...p: unknown[]) => Promise<unknown>)(
+              ...args,
+            );
+          } finally {
+            cleanupPendingCalls("Transport closed before tool response");
+          }
         };
       }
       const value = Reflect.get(target, prop, receiver);
@@ -175,6 +245,9 @@ export function instrumentTransport(
   // If onmessage was already set before we wrapped, re-apply through our proxy
   if (origOnMessage) {
     proxy.onmessage = origOnMessage;
+  }
+  if (origOnClose) {
+    proxy.onclose = origOnClose;
   }
 
   return proxy;

@@ -33,35 +33,28 @@ interface OtlpTracer {
 
 async function initTracer(config: OtlpConfig): Promise<OtlpTracer> {
   // Dynamic imports — these only resolve if the user has @opentelemetry installed
-  const { trace, SpanStatusCode } = await import("@opentelemetry/api");
+  const { SpanStatusCode } = await import("@opentelemetry/api");
+  // Create an isolated provider with OTLP HTTP exporter.
+  const { BasicTracerProvider, SimpleSpanProcessor } = await import(
+    "@opentelemetry/sdk-trace-base"
+  );
+  const { OTLPTraceExporter } = await import(
+    "@opentelemetry/exporter-trace-otlp-http"
+  );
 
-  let tracer;
-  let otlpExporter: { forceFlush?(): Promise<void> } | undefined;
+  const otlpExporter = new OTLPTraceExporter({
+    url: config.endpoint,
+    headers: config.headers,
+  });
 
-  if (config.useGlobalProvider) {
-    // Use the global tracer provider (e.g. dd-trace registers itself here)
-    tracer = trace.getTracer("@gomcp/analytics");
-  } else {
-    // Create an isolated provider with OTLP HTTP exporter
-    const { BasicTracerProvider, SimpleSpanProcessor } =
-      await import("@opentelemetry/sdk-trace-base");
-    const { OTLPTraceExporter } =
-      await import("@opentelemetry/exporter-trace-otlp-http");
-
-    otlpExporter = new OTLPTraceExporter({
-      url: config.endpoint,
-      headers: config.headers,
-    });
-
-    const provider = new BasicTracerProvider({
-      spanProcessors: [
-        new SimpleSpanProcessor(
-          otlpExporter as unknown as import("@opentelemetry/sdk-trace-base").SpanExporter,
-        ),
-      ],
-    });
-    tracer = provider.getTracer("@gomcp/analytics");
-  }
+  const provider = new BasicTracerProvider({
+    spanProcessors: [
+      new SimpleSpanProcessor(
+        otlpExporter as unknown as import("@opentelemetry/sdk-trace-base").SpanExporter,
+      ),
+    ],
+  });
+  const tracer = provider.getTracer("@gomcp/analytics");
 
   return {
     exportEvent(event: ToolCallEvent) {

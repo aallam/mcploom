@@ -49,6 +49,19 @@ export interface AnalyticsSnapshot {
   errorRate: number;
   uptimeMs: number;
   tools: Record<string, ToolStats>;
+  sessions: Record<string, SessionStats>;
+}
+
+/**
+ * Aggregated stats for a single session.
+ */
+export interface SessionStats {
+  count: number;
+  errorCount: number;
+  errorRate: number;
+  avgMs: number;
+  lastCalledAt: number;
+  tools: Record<string, ToolStats>;
 }
 
 /**
@@ -62,9 +75,6 @@ export type ExporterFn = (events: ToolCallEvent[]) => Promise<void>;
 export interface OtlpConfig {
   endpoint: string;
   headers?: Record<string, string>;
-  /** When true, use the global TracerProvider instead of creating an isolated one.
-   *  This is useful when dd-trace or another APM registers as the global OTel provider. */
-  useGlobalProvider?: boolean;
 }
 
 /**
@@ -92,11 +102,20 @@ export interface AnalyticsConfig {
   maxBufferSize?: number;
   /** User-provided metadata added to every event */
   metadata?: Record<string, string>;
+  /** Sampling strategy used by transport-level interception. Default: "per_call" */
+  samplingStrategy?: SamplingStrategy;
+  /** Number of recent tool durations retained per accumulator for percentile calculation. Default: 2048 */
+  toolWindowSize?: number;
   /** Enable OpenTelemetry span creation during tool execution.
    *  When true, uses the global tracer provider (compatible with dd-trace, etc.)
    *  Default: false */
   tracing?: boolean;
 }
+
+/**
+ * Controls how calls are sampled.
+ */
+export type SamplingStrategy = "per_call" | "per_session";
 
 /**
  * A transport that has been instrumented with analytics.

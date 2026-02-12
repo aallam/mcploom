@@ -26,6 +26,7 @@ interface OtelApi {
         options?: { attributes?: Record<string, Attribute> },
       ): OtelSpan;
     };
+    setSpan(ctx: OtelContext, span: OtelSpan): OtelContext;
   };
   context: {
     active(): OtelContext;
@@ -78,7 +79,8 @@ export async function startToolSpan(
     },
   });
 
-  return { span, context: api.context.active() };
+  const spanContext = api.trace.setSpan(api.context.active(), span);
+  return { span, context: spanContext };
 }
 
 /**
