@@ -7,7 +7,7 @@
  *
  * This lets you "supercharge" your own MCP without replacing it.
  */
-import { McpProxy } from "@gomcp/proxy";
+import { McpProxy } from "@mcploom/proxy";
 import { z } from "zod";
 import { connectClient, startMockMcpServer } from "./_helpers.js";
 

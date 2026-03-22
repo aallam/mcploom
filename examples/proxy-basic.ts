@@ -4,7 +4,7 @@
  * Demonstrates McpProxy with two HTTP backends, routing rules,
  * and a client listing/calling tools through the proxy.
  */
-import { McpProxy } from "@gomcp/proxy";
+import { McpProxy } from "@mcploom/proxy";
 import { z } from "zod";
 import { startMockMcpServer, connectClient } from "./_helpers.js";
 

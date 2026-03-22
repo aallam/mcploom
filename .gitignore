@@ -1,8 +1,10 @@
+.worktrees/
 node_modules/
 dist/
+packages/*/dist/
+coverage/
 *.tsbuildinfo
 .env
 .DS_Store
-coverage/
 *.log
 .idea/

@@ -1,0 +1,37 @@
+{
+  "name": "@mcploom/codexec-quickjs",
+  "version": "0.1.0",
+  "description": "QuickJS executor for the mcploom codexec core package.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aallam/mcploom.git",
+    "directory": "packages/codexec-quickjs"
+  },
+  "homepage": "https://github.com/aallam/mcploom/tree/main/packages/codexec-quickjs#readme",
+  "bugs": "https://github.com/aallam/mcploom/issues",
+  "dependencies": {
+    "@mcploom/codexec": "^0.1.0",
+    "quickjs-emscripten": "^0.31.0"
+  }
+}

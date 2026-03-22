@@ -1,4 +1,4 @@
-# @gomcp/proxy
+# @mcploom/proxy
 
 A control layer between MCP clients and backends — aggregate multiple [Model Context Protocol](https://modelcontextprotocol.io/) servers behind a single endpoint with routing, middleware, and caching.
 
@@ -31,13 +31,13 @@ The proxy is for **production apps and custom integrations** where you need a pr
 ## Installation
 
 ```bash
-npm install @gomcp/proxy
+npm install @mcploom/proxy
 ```
 
 ## Quick Start
 
 ```typescript
-import { McpProxy, filter, cache } from "@gomcp/proxy";
+import { McpProxy, filter, cache } from "@mcploom/proxy";
 
 const proxy = new McpProxy({
   // Backend MCP servers
@@ -78,7 +78,7 @@ await mcpServer.connect(someTransport);
 Expose a local stdio-only MCP server as a remote HTTP endpoint:
 
 ```typescript
-import { McpProxy } from "@gomcp/proxy";
+import { McpProxy } from "@mcploom/proxy";
 
 const proxy = new McpProxy({
   servers: {
@@ -102,8 +102,8 @@ interface ProxyConfig {
   servers: Record<string, BackendConfig>;
   routing: RoutingRule[];
   middleware?: ProxyMiddleware[];
-  name?: string;       // Server name (default: "mcp-proxy")
-  version?: string;    // Server version (default: "1.0.0")
+  name?: string; // Server name (default: "mcp-proxy")
+  version?: string; // Server version (default: "1.0.0")
 }
 ```
 
@@ -127,11 +127,11 @@ Rules are evaluated in order (first match wins). Patterns support `*` (any chara
 
 ```typescript
 routing: [
-  { pattern: "deepwiki_*", server: "deepwiki" },    // deepwiki_search, deepwiki_browse
-  { pattern: "*_search", server: "search" },       // google_search, bing_search
-  { pattern: "tool_?", server: "backend" },        // tool_a, tool_1
-  { pattern: "*", server: "default" },             // catch-all
-]
+  { pattern: "deepwiki_*", server: "deepwiki" }, // deepwiki_search, deepwiki_browse
+  { pattern: "*_search", server: "search" }, // google_search, bing_search
+  { pattern: "tool_?", server: "backend" }, // tool_a, tool_1
+  { pattern: "*", server: "default" }, // catch-all
+];
 ```
 
 ### `proxy.connect()`
@@ -181,10 +181,10 @@ Block or allow specific tools. `allow` and `deny` entries support glob
 patterns (`*` and `?`), using the same matching behavior as routing rules.
 
 ```typescript
-filter({ deny: ["dangerous_tool", "admin_delete"] })
-filter({ deny: ["admin_*"] })
-filter({ allow: ["search", "browse", "list"] })
-filter({ allow: ["*_search"] })
+filter({ deny: ["dangerous_tool", "admin_delete"] });
+filter({ deny: ["admin_*"] });
+filter({ allow: ["search", "browse", "list"] });
+filter({ allow: ["*_search"] });
 ```
 
 ### `cache({ ttl, maxSize? })`
@@ -193,7 +193,7 @@ Cache successful tool responses. Cache keys are deterministic even when
 argument object key order differs.
 
 ```typescript
-cache({ ttl: 300, maxSize: 1000 })  // 5 minute TTL, 1000 entries max
+cache({ ttl: 300, maxSize: 1000 }); // 5 minute TTL, 1000 entries max
 ```
 
 ### `transform({ before?, after? })`
@@ -204,7 +204,7 @@ Modify requests and/or responses:
 transform({
   before: (ctx) => ({ ...ctx, arguments: { ...ctx.arguments, limit: 10 } }),
   after: (result) => ({ ...result, content: result.content.slice(0, 5) }),
-})
+});
 ```
 
 ### Custom Middleware

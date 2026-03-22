@@ -1,15 +1,20 @@
 {
-  "name": "@gomcp/analytics",
+  "name": "@mcploom/analytics",
   "version": "0.2.0",
-  "description": "Lightweight analytics and observability for MCP servers",
+  "description": "Lightweight analytics and observability for MCP servers.",
+  "license": "MIT",
   "type": "module",
-  "main": "./dist/index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "default": "./dist/index.js"
+      "require": "./dist/index.cjs"
     }
   },
   "sideEffects": false,
@@ -19,8 +24,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc",
-    "prepublishOnly": "npm run build"
+    "build": "tsdown"
   },
   "keywords": [
     "mcp",
@@ -29,22 +33,18 @@
     "observability",
     "opentelemetry"
   ],
-  "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/aallam/gomcp.git",
+    "url": "git+https://github.com/aallam/mcploom.git",
     "directory": "packages/analytics"
   },
-  "homepage": "https://github.com/aallam/gomcp/tree/main/packages/analytics#readme",
-  "bugs": "https://github.com/aallam/gomcp/issues",
-  "engines": {
-    "node": ">=18.0.0"
-  },
+  "homepage": "https://github.com/aallam/mcploom/tree/main/packages/analytics#readme",
+  "bugs": "https://github.com/aallam/mcploom/issues",
   "peerDependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "@opentelemetry/api": "^1.0.0",
-    "@opentelemetry/sdk-trace-base": "^2.0.0",
-    "@opentelemetry/exporter-trace-otlp-http": ">=0.200.0"
+    "@opentelemetry/exporter-trace-otlp-http": ">=0.200.0",
+    "@opentelemetry/sdk-trace-base": "^2.0.0"
   },
   "peerDependenciesMeta": {
     "@modelcontextprotocol/sdk": {
@@ -53,10 +53,10 @@
     "@opentelemetry/api": {
       "optional": true
     },
-    "@opentelemetry/sdk-trace-base": {
+    "@opentelemetry/exporter-trace-otlp-http": {
       "optional": true
     },
-    "@opentelemetry/exporter-trace-otlp-http": {
+    "@opentelemetry/sdk-trace-base": {
       "optional": true
     }
   },
@@ -64,7 +64,6 @@
     "@modelcontextprotocol/sdk": "^1.12.1",
     "@opentelemetry/api": "^1.9.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.211.0",
-    "@opentelemetry/sdk-trace-base": "^2.5.0",
-    "typescript": "^5.7.0"
+    "@opentelemetry/sdk-trace-base": "^2.5.0"
   }
 }

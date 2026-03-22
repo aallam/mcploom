@@ -1,82 +1,42 @@
-# gomcp
+# mcploom
 
-Production infrastructure for the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) — observability, aggregation, and more.
+Production infrastructure and execution tooling for the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP).
 
 ## Packages
 
-| Package | Description | npm |
-|---------|-------------|-----|
-| [`@gomcp/analytics`](./packages/analytics/) | Lightweight analytics and observability for MCP servers | [![npm](https://img.shields.io/npm/v/@gomcp/analytics)](https://www.npmjs.com/package/@gomcp/analytics) |
-| [`@gomcp/proxy`](./packages/proxy/) | MCP proxy for production apps — aggregate servers, add middleware, bridge stdio to HTTP | [![npm](https://img.shields.io/npm/v/@gomcp/proxy)](https://www.npmjs.com/package/@gomcp/proxy) |
-
-## Why
-
-MCP frameworks help you **build** servers — gomcp helps you **run** them in production. It provides the operational layer that MCP itself doesn't: observability, routing, middleware, and centralized policies across multiple servers.
+| Package                                                           | Description                                                                    |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [`@mcploom/analytics`](./packages/analytics/)                     | Lightweight analytics and observability for MCP servers                        |
+| [`@mcploom/proxy`](./packages/proxy/)                             | MCP proxy for production apps, routing, middleware, and stdio-to-HTTP bridging |
+| [`@mcploom/codexec`](./packages/codexec/)                         | Executor-agnostic MCP code execution core and MCP adapters                     |
+| [`@mcploom/codexec-quickjs`](./packages/codexec-quickjs/)         | QuickJS executor backend for codexec                                           |
+| [`@mcploom/codexec-isolated-vm`](./packages/codexec-isolated-vm/) | `isolated-vm` executor backend for codexec                                     |
 
 ## Quick Start
 
-### Analytics
-
-```typescript
-import { McpAnalytics } from "@gomcp/analytics";
-
-const analytics = new McpAnalytics({ exporter: "console" });
-
-// Instrument a transport (works with ANY MCP server)
-const tracked = analytics.instrument(transport);
-await server.connect(tracked);
-
-// Or wrap individual handlers
-server.tool("search", schema, analytics.track(handler, "search"));
-
-// Get stats
-analytics.getStats();
-// { totalCalls: 150, tools: { search: { p50Ms: 120, p95Ms: 450, errorRate: 0.02 } } }
+```ts
+import { McpAnalytics } from "@mcploom/analytics";
+import { McpProxy } from "@mcploom/proxy";
+import { resolveProvider } from "@mcploom/codexec";
+import { QuickJsExecutor } from "@mcploom/codexec-quickjs";
 ```
 
-### Proxy
-
-```typescript
-import { McpProxy, filter, cache } from "@gomcp/proxy";
-
-const proxy = new McpProxy({
-  servers: {
-    deepwiki: { url: "https://mcp.deepwiki.com/mcp" },
-    github: {
-      url: "https://api.githubcopilot.com/mcp/",
-      headers: { Authorization: "Bearer <GITHUB_TOKEN>" },
-    },
-  },
-  routing: [
-    { pattern: "deepwiki_*", server: "deepwiki" },
-    { pattern: "github_*", server: "github" },
-  ],
-  middleware: [
-    filter({ deny: ["dangerous_tool"] }),
-    cache({ ttl: 300 }),
-  ],
-});
-
-await proxy.listen({ port: 3000 });
-```
+The analytics and proxy packages cover production MCP infrastructure. The codexec family provides sandboxed code execution with pluggable executors and MCP tool-wrapping adapters.
 
 ## Development
 
 ```bash
-# Install dependencies
 npm install
-
-# Run tests
 npm test
-
-# Build all packages
 npm run build
-
-# Type-check
-npx tsc -p packages/analytics/tsconfig.json --noEmit
-npx tsc -p packages/proxy/tsconfig.json --noEmit
+npm run typecheck
+npm run examples
 ```
 
-## License
+`@mcploom/codexec-isolated-vm` is verified separately because it depends on the native `isolated-vm` addon and requires `--no-node-snapshot` on Node 20+:
 
-MIT
+```bash
+npm run verify:isolated-vm
+```
+
+See [examples/](./examples/) for runnable package examples.

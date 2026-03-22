@@ -74,12 +74,12 @@ export function instrumentTransport(
 
   const sampleForSession = (sessionKey: string): boolean => {
     if (samplingStrategy !== "per_session") {
-      // eslint-disable-next-line sonarjs/pseudo-random -- intentional for perf sampling, not security
+      // Intentional for performance sampling, not security.
       return Math.random() < sampleRate;
     }
     const cached = sessionSamplingDecisions.get(sessionKey);
     if (cached !== undefined) return cached;
-    // eslint-disable-next-line sonarjs/pseudo-random -- intentional for perf sampling, not security
+    // Intentional for performance sampling, not security.
     const decision = Math.random() < sampleRate;
     sessionSamplingDecisions.set(sessionKey, decision);
     return decision;
@@ -118,7 +118,6 @@ export function instrumentTransport(
   // We need to intercept onmessage being set (since the server sets it after we wrap)
   // The pattern: wrap the transport so that when server sets onmessage, we inject our interceptor
   const proxy = new Proxy(transport, {
-    // eslint-disable-next-line sonarjs/no-invariant-returns -- Proxy set traps must always return true
     set(target, prop, value) {
       if (prop === "onmessage" && typeof value === "function") {
         const userHandler = value;
@@ -226,9 +225,9 @@ export function instrumentTransport(
       if (prop === "close") {
         return async (...args: unknown[]) => {
           try {
-            return await (target.close as (...p: unknown[]) => Promise<unknown>)(
-              ...args,
-            );
+            return await (
+              target.close as (...p: unknown[]) => Promise<unknown>
+            )(...args);
           } finally {
             cleanupPendingCalls("Transport closed before tool response");
           }
@@ -266,7 +265,7 @@ export function wrapToolHandler<TArgs extends unknown[], TResult>(
   tracing?: boolean,
 ): (...args: TArgs) => Promise<TResult> {
   return async (...args: TArgs) => {
-    const shouldSample = Math.random() < sampleRate; // eslint-disable-line sonarjs/pseudo-random -- intentional for perf sampling, not security
+    const shouldSample = Math.random() < sampleRate;
     if (!shouldSample) {
       return handler(...args);
     }

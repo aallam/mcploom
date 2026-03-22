@@ -17,7 +17,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import express from "express";
 import { z } from "zod";
-import { McpAnalytics } from "@gomcp/analytics";
+import { McpAnalytics } from "@mcploom/analytics";
 
 const PORT = 4100;
 
