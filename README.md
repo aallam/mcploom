@@ -23,11 +23,21 @@ import { QuickJsExecutor } from "@mcploom/codexec-quickjs";
 
 The analytics and proxy packages cover production MCP infrastructure. The codexec family provides sandboxed code execution with pluggable executors and MCP tool-wrapping adapters.
 
+## Install
+
+```bash
+npm install @mcploom/analytics @mcploom/proxy
+npm install @mcploom/codexec @mcploom/codexec-quickjs
+```
+
+Add `@mcploom/codexec-isolated-vm` only when you want the native `isolated-vm` backend.
+
 ## Development
 
 ```bash
 npm install
 npm test
+npm run lint
 npm run build
 npm run typecheck
 npm run examples
@@ -39,4 +49,4 @@ npm run examples
 npm run verify:isolated-vm
 ```
 
-See [examples/](./examples/) for runnable package examples.
+See [examples/](./examples/) for runnable package examples, including MCP wrapping flows for codexec.
