@@ -1,7 +1,14 @@
+import type { ZodRawShape, ZodTypeAny } from "zod";
+
 /**
  * JSON Schema-like object used by the public tool and type-generation APIs.
  */
 export type JsonSchema = Record<string, unknown>;
+
+/**
+ * Supported authoring formats for tool schemas.
+ */
+export type ToolSchema = JsonSchema | ZodTypeAny | ZodRawShape;
 
 /**
  * Stable error codes returned by executors and wrapped tool calls.
@@ -63,9 +70,9 @@ export interface ToolDescriptor {
   /** Optional human-readable description used in generated types and docs. */
   description?: string;
   /** Optional input schema validated before the tool is invoked. */
-  inputSchema?: JsonSchema;
+  inputSchema?: ToolSchema;
   /** Optional output schema validated after the tool resolves. */
-  outputSchema?: JsonSchema;
+  outputSchema?: ToolSchema;
   /** Tool implementation invoked by the host runtime. */
   execute: (
     input: unknown,
@@ -88,7 +95,13 @@ export interface ToolProvider {
 /**
  * Tool descriptor after validation, sanitization, and execution wrapping.
  */
-export interface ResolvedToolDescriptor extends ToolDescriptor {
+export interface ResolvedToolDescriptor {
+  /** Optional human-readable description used in generated types and docs. */
+  description?: string;
+  /** Normalized JSON Schema validated before the tool is invoked. */
+  inputSchema?: JsonSchema;
+  /** Normalized JSON Schema validated after the tool resolves. */
+  outputSchema?: JsonSchema;
   /** Original upstream tool name. */
   originalName: string;
   /** Sanitized tool name visible in guest code. */
@@ -117,7 +130,7 @@ export interface ResolvedToolProvider {
  * Tool shape consumed by JSON Schema type generation.
  */
 export type TypegenToolDescriptor = Pick<
-  ToolDescriptor,
+  ResolvedToolDescriptor,
   "description" | "inputSchema" | "outputSchema"
 > &
-  Partial<Pick<ToolDescriptor, "execute">>;
+  Partial<Pick<ResolvedToolDescriptor, "execute">>;
