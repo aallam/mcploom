@@ -2,53 +2,51 @@
 
 Runnable examples for the `@mcploom/*` package family.
 
-## Prerequisites
+[![Examples](https://img.shields.io/badge/examples-runnable-0ea5e9?style=flat-square)](https://github.com/aallam/mcploom/tree/main/examples)
+[![CI](https://img.shields.io/github/actions/workflow/status/aallam/mcploom/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/aallam/mcploom/actions/workflows/ci.yml)
 
-```sh
+## Run Them
+
+```bash
 npm install
 npm run build
-```
-
-## Useful scripts
-
-```sh
-npm run example:analytics
-npm run example:proxy
-npm run example:codexec
-npm run example:codexec-mcp-provider
-npm run example:codexec-mcp-server
-```
-
-Standard examples run together with:
-
-```sh
 npm run examples
 ```
 
-The isolated-vm example stays on its own verification lane because it depends on the native addon and `--no-node-snapshot`:
+The `isolated-vm` example stays on its own lane because it depends on the native addon and `--no-node-snapshot`:
 
-```sh
+```bash
 npm run example:codexec-isolated-vm
 npm run verify:isolated-vm
 ```
 
-## Examples
+## Analytics
 
-| File                                | Package                                             | Description                                                                         |
-| ----------------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `analytics-track-handlers.ts`       | `@mcploom/analytics`                                | Wrap plain functions with `track()`, console exporter, and inspect a stats snapshot |
-| `analytics-custom-exporter.ts`      | `@mcploom/analytics`                                | Custom async exporter function, sampling, and `reset()`                             |
-| `analytics-express.ts`              | `@mcploom/analytics`                                | Express middleware instrumentation around MCP-style handlers                        |
-| `analytics-instrument-transport.ts` | `@mcploom/analytics`                                | Instrument an MCP transport with `instrument()`                                     |
-| `analytics-stateless-transport.ts`  | `@mcploom/analytics`                                | Stateless transport instrumentation without SDK server wrappers                     |
-| `proxy-basic.ts`                    | `@mcploom/proxy`                                    | Two HTTP backends, routing rules, tool listing, and routed tool calls               |
-| `proxy-express.ts`                  | `@mcploom/proxy`                                    | Mount proxy handling inside an Express application                                  |
-| `proxy-middleware.ts`               | `@mcploom/proxy`                                    | `filter()`, `cache()`, `transform()`, and custom middleware                         |
-| `proxy-public-http.ts`              | `@mcploom/proxy`                                    | Proxy to public HTTP MCP backends                                                   |
-| `proxy-local-default.ts`            | `@mcploom/proxy`                                    | Keep a local MCP as default and layer remote backends on top                        |
-| `proxy-stateless.ts`                | `@mcploom/proxy`                                    | Run the proxy against stateless transport implementations                           |
-| `proxy-with-analytics.ts`           | `@mcploom/proxy` + `@mcploom/analytics`             | Instrument proxy transports with analytics                                          |
-| `codexec-basic.ts`                  | `@mcploom/codexec` + `@mcploom/codexec-quickjs`     | Resolve a provider and execute sandboxed code with QuickJS                          |
-| `codexec-mcp-provider.ts`           | `@mcploom/codexec/mcp` + `@mcploom/codexec-quickjs` | Wrap MCP tools into a provider and execute against them                             |
-| `codexec-mcp-server.ts`             | `@mcploom/codexec/mcp` + `@mcploom/codexec-quickjs` | Expose `mcp_search_tools`, `mcp_execute_code`, and `mcp_code`                       |
-| `codexec-isolated-vm-basic.ts`      | `@mcploom/codexec-isolated-vm`                      | Run the same provider flow on the `isolated-vm` backend                             |
+| File                                                                       | What it shows                                                   |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| [`analytics-track-handlers.ts`](./analytics-track-handlers.ts)             | Wrap plain handlers with `track()` and inspect a stats snapshot |
+| [`analytics-custom-exporter.ts`](./analytics-custom-exporter.ts)           | Custom async exporter, sampling, and reset flows                |
+| [`analytics-instrument-transport.ts`](./analytics-instrument-transport.ts) | Transport-level instrumentation around MCP calls                |
+| [`analytics-stateless-transport.ts`](./analytics-stateless-transport.ts)   | Stateless transport instrumentation without SDK server wrappers |
+| [`analytics-express.ts`](./analytics-express.ts)                           | Express integration around MCP-style handlers                   |
+
+## Proxy
+
+| File                                                   | What it shows                                                    |
+| ------------------------------------------------------ | ---------------------------------------------------------------- |
+| [`proxy-basic.ts`](./proxy-basic.ts)                   | Two HTTP backends, routing rules, tool listing, and routed calls |
+| [`proxy-middleware.ts`](./proxy-middleware.ts)         | `filter()`, `cache()`, `transform()`, and custom middleware      |
+| [`proxy-public-http.ts`](./proxy-public-http.ts)       | Proxying to public HTTP MCP backends                             |
+| [`proxy-local-default.ts`](./proxy-local-default.ts)   | Local default backend layered with remote backends               |
+| [`proxy-stateless.ts`](./proxy-stateless.ts)           | Stateless transport implementations                              |
+| [`proxy-express.ts`](./proxy-express.ts)               | Mount the proxy inside an Express application                    |
+| [`proxy-with-analytics.ts`](./proxy-with-analytics.ts) | Combine proxying with analytics instrumentation                  |
+
+## Codexec
+
+| File                                                             | What it shows                                                 |
+| ---------------------------------------------------------------- | ------------------------------------------------------------- |
+| [`codexec-basic.ts`](./codexec-basic.ts)                         | Resolve a provider and execute sandboxed code with QuickJS    |
+| [`codexec-mcp-provider.ts`](./codexec-mcp-provider.ts)           | Wrap MCP tools into a provider and execute against them       |
+| [`codexec-mcp-server.ts`](./codexec-mcp-server.ts)               | Expose `mcp_search_tools`, `mcp_execute_code`, and `mcp_code` |
+| [`codexec-isolated-vm-basic.ts`](./codexec-isolated-vm-basic.ts) | Run the same provider flow on the `isolated-vm` backend       |
