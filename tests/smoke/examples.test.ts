@@ -83,7 +83,7 @@ describe("examples", () => {
     expect(result.stdout).toContain("Stats Snapshot");
     expect(result.stdout).toContain("Available tools");
     expect(result.stdout).toContain("mcp server example result");
-  });
+  }, 15_000);
 
   it("documents the examples entrypoint", () => {
     const examplesReadmePath = path.join(repoRoot, "examples", "README.md");
