@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import * as z from "zod";
 import { resolveProvider } from "@mcploom/codexec";
 
 function createContext(
@@ -119,5 +120,104 @@ describe("resolveProvider", () => {
     ).rejects.toMatchObject({
       code: "validation_error",
     });
+  });
+
+  it("accepts a full Zod schema for input validation", async () => {
+    const provider = resolveProvider({
+      name: "mcp",
+      tools: {
+        search: {
+          inputSchema: z.object({
+            query: z.string(),
+            limit: z.number().int().optional(),
+          }),
+          execute: async (input) => input,
+        },
+      },
+    });
+
+    await expect(
+      provider.tools.search.execute(
+        { query: "docs", limit: 2 },
+        createContext("mcp", "search", "search"),
+      ),
+    ).resolves.toEqual({
+      limit: 2,
+      query: "docs",
+    });
+
+    await expect(
+      provider.tools.search.execute(
+        { limit: "bad" },
+        createContext("mcp", "search", "search"),
+      ),
+    ).rejects.toMatchObject({
+      code: "validation_error",
+    });
+  });
+
+  it("accepts an MCP-style raw Zod shape for input validation and generated types", async () => {
+    const provider = resolveProvider({
+      name: "mcp",
+      tools: {
+        search: {
+          inputSchema: {
+            limit: z.number().int().optional(),
+            query: z.string(),
+          },
+          execute: async (input) => input,
+        },
+      },
+    });
+
+    expect(provider.types).toContain("function search(input:");
+    expect(provider.types).toContain("query: string;");
+    expect(provider.types).toContain("limit?: number;");
+
+    await expect(
+      provider.tools.search.execute(
+        { query: "docs" },
+        createContext("mcp", "search", "search"),
+      ),
+    ).resolves.toEqual({
+      query: "docs",
+    });
+  });
+
+  it("accepts Zod output schemas for output validation", async () => {
+    const provider = resolveProvider({
+      name: "mcp",
+      tools: {
+        search: {
+          outputSchema: z.object({
+            hits: z.array(z.string()),
+          }),
+          execute: async () => ({ hits: [1, 2, 3] }),
+        },
+      },
+    });
+
+    await expect(
+      provider.tools.search.execute(
+        {},
+        createContext("mcp", "search", "search"),
+      ),
+    ).rejects.toMatchObject({
+      code: "validation_error",
+    });
+  });
+
+  it("rejects unsupported schema inputs with a clear configuration error", () => {
+    expect(() =>
+      resolveProvider({
+        name: "mcp",
+        tools: {
+          search: {
+            inputSchema: 42 as never,
+            execute: async () => ({ ok: true }),
+          },
+        },
+      }),
+    ).toThrow(/search/i);
   });
 });

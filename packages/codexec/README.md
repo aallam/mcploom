@@ -10,6 +10,8 @@ npm install @mcploom/codexec @mcploom/codexec-quickjs
 
 `@mcploom/codexec` provides the shared types, provider resolution, code normalization, schema validation, and MCP adapters. Use a companion executor package such as `@mcploom/codexec-quickjs` or `@mcploom/codexec-isolated-vm` to actually run sandboxed code.
 
+Tool schemas can be authored as JSON Schema, full Zod schemas, or MCP SDK-style raw Zod shapes.
+
 ## Exports
 
 - `@mcploom/codexec`
@@ -26,19 +28,16 @@ npm install @mcploom/codexec @mcploom/codexec-quickjs
 ```ts
 import { resolveProvider } from "@mcploom/codexec";
 import { QuickJsExecutor } from "@mcploom/codexec-quickjs";
+import * as z from "zod";
 
 const provider = resolveProvider({
   name: "tools",
   tools: {
     add: {
-      inputSchema: {
-        type: "object",
-        required: ["x", "y"],
-        properties: {
-          x: { type: "number" },
-          y: { type: "number" },
-        },
-      },
+      inputSchema: z.object({
+        x: z.number(),
+        y: z.number(),
+      }),
       execute: async (input) => {
         const { x, y } = input as { x: number; y: number };
         return { sum: x + y };

@@ -14,5 +14,6 @@ export type {
   ToolDescriptor,
   ToolExecutionContext,
   ToolProvider,
+  ToolSchema,
   TypegenToolDescriptor,
 } from "./types";
