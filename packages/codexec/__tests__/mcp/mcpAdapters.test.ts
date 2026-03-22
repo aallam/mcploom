@@ -7,24 +7,37 @@ import * as z from "zod";
 import { codeMcpServer, createMcpToolProvider } from "@mcploom/codexec/mcp";
 import { QuickJsExecutor } from "@mcploom/codexec-quickjs";
 
+const searchDocsInputSchema: Record<string, z.ZodTypeAny> = {
+  query: z.string(),
+};
+
+const searchDocsOutputSchema: Record<string, z.ZodTypeAny> = {
+  hits: z.array(z.string()),
+};
+
 function createUpstreamServer(): McpServer {
   const server = new McpServer({
     name: "upstream",
     version: "1.0.0",
   });
+  const registerTool = server.registerTool.bind(server) as unknown as (
+    name: string,
+    config: {
+      description?: string;
+      inputSchema?: unknown;
+      outputSchema?: unknown;
+    },
+    handler: (...args: never[]) => Promise<unknown>,
+  ) => void;
 
-  server.registerTool(
+  registerTool(
     "search-docs",
     {
       description: "Search documentation",
-      inputSchema: {
-        query: z.string(),
-      },
-      outputSchema: {
-        hits: z.array(z.string()),
-      },
+      inputSchema: searchDocsInputSchema,
+      outputSchema: searchDocsOutputSchema,
     },
-    async (args) => ({
+    async (args: { query: string }) => ({
       content: [{ text: `found ${args.query}`, type: "text" }],
       structuredContent: {
         hits: [args.query],
@@ -32,7 +45,7 @@ function createUpstreamServer(): McpServer {
     }),
   );
 
-  server.registerTool(
+  registerTool(
     "explode",
     {
       description: "Always fails",
