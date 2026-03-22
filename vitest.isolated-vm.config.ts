@@ -28,6 +28,6 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
-    include: ["isolated-vm-tests/**/*.test.ts"],
+    include: ["packages/codexec-isolated-vm/__tests__/**/*.test.ts"],
   },
 });

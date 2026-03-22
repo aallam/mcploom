@@ -36,7 +36,7 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
-    include: ["packages/*/__tests__/**/*.test.ts", "tests/**/*.test.ts"],
-    exclude: ["isolated-vm-tests/**/*.test.ts"],
+    include: ["packages/*/__tests__/**/*.test.ts"],
+    exclude: ["packages/codexec-isolated-vm/__tests__/**/*.test.ts"],
   },
 });
