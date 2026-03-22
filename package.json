@@ -15,7 +15,7 @@
     "packages/codexec-isolated-vm"
   ],
   "scripts": {
-    "build": "npm run build --workspace @mcploom/analytics && npm run build --workspace @mcploom/proxy && npm run build --workspace @mcploom/codexec && npm run build --workspace @mcploom/codexec-quickjs",
+    "build": "npm run build --workspace @mcploom/analytics && npm run build --workspace @mcploom/proxy && npm run build --workspace @mcploom/codexec && npm run build --workspace @mcploom/codexec-quickjs && npm run build:isolated-vm",
     "build:isolated-vm": "npm run build --workspace @mcploom/codexec-isolated-vm",
     "clean": "rm -rf coverage dist packages/*/dist",
     "example:analytics": "node --import tsx examples/analytics-track-handlers.ts",
