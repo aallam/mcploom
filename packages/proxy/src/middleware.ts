@@ -17,7 +17,9 @@ function normalizeForCacheKey(value: unknown): unknown {
   }
   if (isPlainObject(value)) {
     const normalized: Record<string, unknown> = {};
-    const entries = Object.entries(value).sort(([a], [b]) => a.localeCompare(b));
+    const entries = Object.entries(value).sort(([a], [b]) =>
+      a.localeCompare(b),
+    );
     for (const [key, entryValue] of entries) {
       normalized[key] = normalizeForCacheKey(entryValue);
     }
@@ -52,7 +54,10 @@ export function filter(opts: {
         isError: true,
       };
     }
-    if (allowPatterns && !allowPatterns.some((pattern) => pattern.test(ctx.toolName))) {
+    if (
+      allowPatterns &&
+      !allowPatterns.some((pattern) => pattern.test(ctx.toolName))
+    ) {
       return {
         content: [
           { type: "text", text: `Tool "${ctx.toolName}" is not in allow list` },

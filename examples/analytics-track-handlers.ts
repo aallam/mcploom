@@ -5,7 +5,7 @@
  * using the console exporter, and inspecting stats snapshots.
  * No MCP server or network — simplest possible example.
  */
-import { McpAnalytics } from "@gomcp/analytics";
+import { McpAnalytics } from "@mcploom/analytics";
 
 const analytics = new McpAnalytics({
   exporter: "console",

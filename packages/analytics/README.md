@@ -1,4 +1,4 @@
-# @gomcp/analytics
+# @mcploom/analytics
 
 Lightweight analytics and observability for [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) servers. Zero required dependencies, framework-agnostic, works at the JSON-RPC transport level.
 
@@ -16,7 +16,7 @@ Lightweight analytics and observability for [Model Context Protocol](https://mod
 ## Installation
 
 ```bash
-npm install @gomcp/analytics
+npm install @mcploom/analytics
 ```
 
 ## Quick Start
@@ -24,7 +24,7 @@ npm install @gomcp/analytics
 ```typescript
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { McpAnalytics } from "@gomcp/analytics";
+import { McpAnalytics } from "@mcploom/analytics";
 
 // 1. Create analytics instance
 const analytics = new McpAnalytics({
@@ -33,7 +33,9 @@ const analytics = new McpAnalytics({
 
 // 2. Create your server and transport
 const server = new McpServer({ name: "my-server", version: "1.0.0" });
-const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: () => crypto.randomUUID() });
+const transport = new StreamableHTTPServerTransport({
+  sessionIdGenerator: () => crypto.randomUUID(),
+});
 
 // 3. Instrument the transport (intercepts all tool calls automatically)
 const trackedTransport = analytics.instrument(transport);
@@ -53,18 +55,18 @@ await analytics.shutdown();
 
 Create an analytics instance.
 
-| Option            | Type                                                     | Default | Description                                               |
-|-------------------|----------------------------------------------------------|---------|-----------------------------------------------------------|
-| `exporter`        | `"console" \| "json" \| "otlp" \| Function`              | —       | Where to send metrics (required)                          |
-| `json`            | `{ path: string }`                                       | —       | JSON file config (required when `exporter: "json"`)       |
-| `otlp`            | `{ endpoint: string, headers?: Record<string, string> }` | —       | OTLP config (required when `exporter: "otlp"`)            |
-| `sampleRate`      | `number`                                                 | `1.0`   | Fraction of calls to sample (0.0 to 1.0)                  |
-| `flushIntervalMs` | `number`                                                 | `5000`  | How often to flush events to the exporter                 |
-| `maxBufferSize`   | `number`                                                 | `10000` | Max events in the ring buffer                             |
-| `metadata`        | `Record<string, string>`                                 | —       | Metadata added to every event                             |
-| `samplingStrategy`| `"per_call" \| "per_session"`                            | `"per_call"` | Sampling behavior for transport instrumentation         |
-| `toolWindowSize`  | `number`                                                 | `2048`  | Recent durations kept per accumulator for percentiles     |
-| `tracing`         | `boolean`                                                | `false` | Create OpenTelemetry spans via the global tracer provider |
+| Option             | Type                                                     | Default      | Description                                               |
+| ------------------ | -------------------------------------------------------- | ------------ | --------------------------------------------------------- |
+| `exporter`         | `"console" \| "json" \| "otlp" \| Function`              | —            | Where to send metrics (required)                          |
+| `json`             | `{ path: string }`                                       | —            | JSON file config (required when `exporter: "json"`)       |
+| `otlp`             | `{ endpoint: string, headers?: Record<string, string> }` | —            | OTLP config (required when `exporter: "otlp"`)            |
+| `sampleRate`       | `number`                                                 | `1.0`        | Fraction of calls to sample (0.0 to 1.0)                  |
+| `flushIntervalMs`  | `number`                                                 | `5000`       | How often to flush events to the exporter                 |
+| `maxBufferSize`    | `number`                                                 | `10000`      | Max events in the ring buffer                             |
+| `metadata`         | `Record<string, string>`                                 | —            | Metadata added to every event                             |
+| `samplingStrategy` | `"per_call" \| "per_session"`                            | `"per_call"` | Sampling behavior for transport instrumentation           |
+| `toolWindowSize`   | `number`                                                 | `2048`       | Recent durations kept per accumulator for percentiles     |
+| `tracing`          | `boolean`                                                | `false`      | Create OpenTelemetry spans via the global tracer provider |
 
 ### `analytics.instrument(transport)`
 
@@ -80,9 +82,13 @@ await server.connect(trackedTransport);
 Wrap a tool handler function to record metrics. Use this when you want per-handler control instead of transport-level interception.
 
 ```typescript
-server.tool("search", schema, analytics.track(async (params) => {
-  return await doSearch(params);
-}, "search"));
+server.tool(
+  "search",
+  schema,
+  analytics.track(async (params) => {
+    return await doSearch(params);
+  }, "search"),
+);
 ```
 
 ### `analytics.getStats()`
@@ -107,7 +113,7 @@ interface ToolStats {
   p95Ms: number;
   p99Ms: number;
   avgMs: number;
-  lastCalledAt: number;  // Unix timestamp ms
+  lastCalledAt: number; // Unix timestamp ms
 }
 
 interface SessionStats {
@@ -115,7 +121,7 @@ interface SessionStats {
   errorCount: number;
   errorRate: number;
   avgMs: number;
-  lastCalledAt: number;  // Unix timestamp ms
+  lastCalledAt: number; // Unix timestamp ms
   tools: Record<string, ToolStats>;
 }
 ```
@@ -189,7 +195,7 @@ new McpAnalytics({
   exporter: "otlp",
   otlp: {
     endpoint: "http://localhost:4318/v1/traces",
-    headers: { "Authorization": "Bearer ..." },
+    headers: { Authorization: "Bearer ..." },
   },
 });
 ```
@@ -218,7 +224,7 @@ When you use an APM like [dd-trace](https://github.com/DataDog/dd-trace-js) that
 ```typescript
 import "dd-trace/init"; // sets up dd-trace as global OTel provider
 
-import { McpAnalytics } from "@gomcp/analytics";
+import { McpAnalytics } from "@mcploom/analytics";
 
 const analytics = new McpAnalytics({
   exporter: "console",
@@ -239,7 +245,7 @@ When using `analytics.track()` (handler wrapping), the handler executes inside t
 Each `mcp.tool_call` span includes these attributes:
 
 | Attribute                | Description                                     |
-|--------------------------|-------------------------------------------------|
+| ------------------------ | ----------------------------------------------- |
 | `mcp.tool.name`          | Tool name                                       |
 | `mcp.tool.input_size`    | Input size in bytes                             |
 | `mcp.tool.duration_ms`   | Duration (OTLP exporter only)                   |

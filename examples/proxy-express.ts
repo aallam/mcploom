@@ -11,7 +11,7 @@
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import express from "express";
 import { z } from "zod";
-import { McpProxy, cache } from "@gomcp/proxy";
+import { McpProxy, cache } from "@mcploom/proxy";
 import { startMockMcpServer, connectClient } from "./_helpers.js";
 
 const PROXY_PORT = 4500;

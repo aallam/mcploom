@@ -1,4 +1,5 @@
 import type { OtlpConfig, ToolCallEvent } from "../types.js";
+import type { SpanExporter } from "@opentelemetry/sdk-trace-base";
 
 /**
  * OTLP exporter: sends tool call events as OpenTelemetry spans.
@@ -35,12 +36,10 @@ async function initTracer(config: OtlpConfig): Promise<OtlpTracer> {
   // Dynamic imports — these only resolve if the user has @opentelemetry installed
   const { SpanStatusCode } = await import("@opentelemetry/api");
   // Create an isolated provider with OTLP HTTP exporter.
-  const { BasicTracerProvider, SimpleSpanProcessor } = await import(
-    "@opentelemetry/sdk-trace-base"
-  );
-  const { OTLPTraceExporter } = await import(
-    "@opentelemetry/exporter-trace-otlp-http"
-  );
+  const { BasicTracerProvider, SimpleSpanProcessor } =
+    await import("@opentelemetry/sdk-trace-base");
+  const { OTLPTraceExporter } =
+    await import("@opentelemetry/exporter-trace-otlp-http");
 
   const otlpExporter = new OTLPTraceExporter({
     url: config.endpoint,
@@ -49,12 +48,10 @@ async function initTracer(config: OtlpConfig): Promise<OtlpTracer> {
 
   const provider = new BasicTracerProvider({
     spanProcessors: [
-      new SimpleSpanProcessor(
-        otlpExporter as unknown as import("@opentelemetry/sdk-trace-base").SpanExporter,
-      ),
+      new SimpleSpanProcessor(otlpExporter as unknown as SpanExporter),
     ],
   });
-  const tracer = provider.getTracer("@gomcp/analytics");
+  const tracer = provider.getTracer("@mcploom/analytics");
 
   return {
     exportEvent(event: ToolCallEvent) {

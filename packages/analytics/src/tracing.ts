@@ -71,7 +71,7 @@ export async function startToolSpan(
   const api = await getOtelApi();
   if (!api) return undefined;
 
-  const tracer = api.trace.getTracer("@gomcp/analytics");
+  const tracer = api.trace.getTracer("@mcploom/analytics");
   const span = tracer.startSpan("mcp.tool_call", {
     attributes: {
       "mcp.tool.name": toolName,

@@ -7,16 +7,18 @@
  *
  * This example requires internet access.
  */
-import { McpProxy } from "@gomcp/proxy";
+import { McpProxy } from "@mcploom/proxy";
 import { connectClient } from "./_helpers.js";
 
 const PORT = 4210;
 
 const DEEPWIKI_REPO = "modelcontextprotocol/typescript-sdk";
-const DEEPWIKI_QUESTION = "What are the main client transport options in this repository?";
+const DEEPWIKI_QUESTION =
+  "What are the main client transport options in this repository?";
 
 const CONTEXT7_LIBRARY = "react";
-const CONTEXT7_QUERY = "Find the best official React library docs with examples";
+const CONTEXT7_QUERY =
+  "Find the best official React library docs with examples";
 
 type ContentBlock = { type: string; text?: string };
 
