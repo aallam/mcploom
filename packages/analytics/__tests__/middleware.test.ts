@@ -197,11 +197,14 @@ describe("instrumentTransport", () => {
     vi.spyOn(tracing, "startToolSpan").mockImplementation(
       () =>
         new Promise((resolve) => {
-          resolveSpan =
-            resolve as (value: typeof mockTracingSpan | undefined) => void;
+          resolveSpan = resolve as (
+            value: typeof mockTracingSpan | undefined,
+          ) => void;
         }),
     );
-    const endSpy = vi.spyOn(tracing, "endToolSpan").mockImplementation(() => {});
+    const endSpy = vi
+      .spyOn(tracing, "endToolSpan")
+      .mockImplementation(() => {});
 
     const proxy = instrumentTransport(
       transport,
@@ -243,7 +246,9 @@ describe("instrumentTransport", () => {
     const mockTracingSpan = { span: mockSpan, context: {} };
 
     vi.spyOn(tracing, "startToolSpan").mockResolvedValue(mockTracingSpan);
-    const endSpy = vi.spyOn(tracing, "endToolSpan").mockImplementation(() => {});
+    const endSpy = vi
+      .spyOn(tracing, "endToolSpan")
+      .mockImplementation(() => {});
 
     const proxy = instrumentTransport(
       transport,

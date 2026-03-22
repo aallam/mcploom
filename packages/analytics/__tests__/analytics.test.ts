@@ -125,8 +125,8 @@ describe("McpAnalytics", () => {
     const trackA = analytics.track(async () => ({ content: [] }), "a");
     const trackB = analytics.track(async () => ({ content: [] }), "b");
 
-    await trackA({});
-    await trackB({});
+    await trackA();
+    await trackB();
 
     const top = analytics.getTopSessions(1);
     expect(top).toHaveLength(1);

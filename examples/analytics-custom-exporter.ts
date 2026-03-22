@@ -4,7 +4,7 @@
  * Demonstrates a custom async exporter function, 50% sampling,
  * and the reset() method.
  */
-import { McpAnalytics, type ToolCallEvent } from "@gomcp/analytics";
+import { McpAnalytics, type ToolCallEvent } from "@mcploom/analytics";
 
 const collected: ToolCallEvent[] = [];
 

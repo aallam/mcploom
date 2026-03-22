@@ -1,31 +1,57 @@
 {
-  "name": "mcp-tools",
+  "name": "mcploom-workspace",
   "private": true,
+  "description": "Workspace for the mcploom MCP infrastructure and codexec packages.",
+  "license": "MIT",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "workspaces": [
-    "packages/*"
+    "packages/analytics",
+    "packages/proxy",
+    "packages/codexec",
+    "packages/codexec-quickjs",
+    "packages/codexec-isolated-vm"
   ],
   "scripts": {
-    "build": "npm run build --workspaces",
+    "build": "npm run build --workspace @mcploom/analytics && npm run build --workspace @mcploom/proxy && npm run build --workspace @mcploom/codexec && npm run build --workspace @mcploom/codexec-quickjs",
+    "build:isolated-vm": "npm run build --workspace @mcploom/codexec-isolated-vm",
+    "clean": "rm -rf coverage dist packages/*/dist",
+    "example:analytics": "node --import tsx examples/analytics-track-handlers.ts",
+    "example:codexec": "node --import tsx examples/codexec-basic.ts",
+    "example:codexec-isolated-vm": "NODE_OPTIONS=--no-node-snapshot node --no-node-snapshot --import tsx examples/codexec-isolated-vm-basic.ts",
+    "example:codexec-mcp-provider": "node --import tsx examples/codexec-mcp-provider.ts",
+    "example:codexec-mcp-server": "node --import tsx examples/codexec-mcp-server.ts",
+    "example:proxy": "node --import tsx examples/proxy-basic.ts",
+    "examples": "npm run example:analytics && npm run example:proxy && npm run example:codexec && npm run example:codexec-mcp-provider && npm run example:codexec-mcp-server",
+    "examples:isolated-vm": "npm run example:codexec-isolated-vm",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
     "test": "vitest run",
+    "test:isolated-vm": "NODE_OPTIONS=--no-node-snapshot node --no-node-snapshot ./node_modules/vitest/vitest.mjs run --config vitest.isolated-vm.config.ts",
     "test:watch": "vitest",
-    "lint": "eslint .",
-    "format": "prettier --write packages/**/*.ts examples/**/*.ts",
-    "format:check": "prettier --check packages/**/*.ts examples/**/*.ts",
-    "clean": "rm -rf packages/*/dist"
+    "typecheck": "tsc --noEmit",
+    "typecheck:isolated-vm": "tsc --noEmit -p tsconfig.isolated-vm.json",
+    "verify:isolated-vm": "npm run typecheck:isolated-vm && npm run build:isolated-vm && npm run test:isolated-vm && npm run examples:isolated-vm"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
+    "@eslint/js": "^9.39.2",
     "@types/express": "^5.0.6",
     "@types/node": "^22.0.0",
-    "eslint": "^9.0.0",
+    "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-sonarjs": "^3.0.7",
+    "eslint-plugin-jsdoc": "^62.8.0",
     "express": "^5.2.1",
+    "globals": "^17.4.0",
     "prettier": "^3.0.0",
+    "tsdown": "^0.16.8",
     "tsx": "^4.0.0",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.55.0",
-    "vitest": "^3.0.0"
+    "vitest": "^3.2.4"
   }
 }

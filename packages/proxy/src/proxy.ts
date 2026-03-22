@@ -129,7 +129,10 @@ export class McpProxy {
       } catch (error) {
         return {
           content: [
-            { type: "text", text: `Backend error: ${extractErrorMessage(error)}` },
+            {
+              type: "text",
+              text: `Backend error: ${extractErrorMessage(error)}`,
+            },
           ],
           isError: true,
         };
@@ -159,15 +162,26 @@ export class McpProxy {
         }
       }
 
-      const inputSchema = z.looseObject(shape);
+      const inputSchema = z.object(shape).passthrough();
+      const registerTool = server.registerTool.bind(server) as (
+        toolName: string,
+        config: {
+          description: string;
+          inputSchema: z.AnyZodObject;
+        },
+        handler: (args: Record<string, unknown>) => Promise<{
+          content: CallToolResult["content"];
+          isError?: boolean;
+        }>,
+      ) => void;
 
-      server.registerTool(
+      registerTool(
         tool.name,
         {
           description: tool.description ?? "",
           inputSchema,
         },
-        async (args) => {
+        async (args: Record<string, unknown>) => {
           const result = await this.callTool(tool.name, args);
           return {
             content: result.content as CallToolResult["content"],
@@ -197,7 +211,10 @@ export class McpProxy {
       res: {
         headersSent?: boolean;
         writableEnded: boolean;
-        writeHead: (statusCode: number, headers: Record<string, string>) => void;
+        writeHead: (
+          statusCode: number,
+          headers: Record<string, string>,
+        ) => void;
         end: (body?: string) => void;
       },
       statusCode: number,
@@ -220,7 +237,6 @@ export class McpProxy {
       }
     };
 
-    // eslint-disable-next-line sonarjs/cognitive-complexity -- HTTP handler requires inherent branching
     const httpServer = createServer(async (req, res) => {
       try {
         const url = new URL(req.url ?? "/", `http://localhost:${opts.port}`);
@@ -268,7 +284,10 @@ export class McpProxy {
             try {
               await sessionServer.connect(transport);
             } catch (error) {
-              await Promise.allSettled([transport.close(), sessionServer.close()]);
+              await Promise.allSettled([
+                transport.close(),
+                sessionServer.close(),
+              ]);
               throw error;
             }
           }
@@ -316,7 +335,10 @@ export class McpProxy {
     return {
       close: async () => {
         for (const session of sessions.values()) {
-          await Promise.allSettled([session.transport.close(), session.server.close()]);
+          await Promise.allSettled([
+            session.transport.close(),
+            session.server.close(),
+          ]);
         }
         sessions.clear();
         await this.close();

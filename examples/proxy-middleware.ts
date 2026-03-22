@@ -4,12 +4,12 @@
  * Demonstrates filter(), cache(), transform(), and a custom logging
  * middleware. Uses proxy.callTool() directly (no HTTP server).
  */
-import { McpProxy, filter, cache, transform } from "@gomcp/proxy";
+import { McpProxy, filter, cache, transform } from "@mcploom/proxy";
 import type {
   CacheStore,
   MiddlewareResult,
   ProxyMiddleware,
-} from "@gomcp/proxy";
+} from "@mcploom/proxy";
 import { z } from "zod";
 import { startMockMcpServer } from "./_helpers.js";
 
