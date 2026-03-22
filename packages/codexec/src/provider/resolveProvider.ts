@@ -6,6 +6,7 @@ import {
   isJsonSerializable,
 } from "../errors";
 import { sanitizeToolName } from "../sanitize";
+import { normalizeToolSchema } from "../schema/normalizeSchema";
 import { generateTypesFromJsonSchema } from "../typegen/jsonSchema";
 import type {
   JsonSchema,
@@ -115,8 +116,18 @@ export function resolveProvider(provider: ToolProvider): ResolvedToolProvider {
     originalToSafeName[originalName] = safeName;
     safeToOriginalName[safeName] = originalName;
 
-    const inputValidator = compileValidator(ajv, descriptor.inputSchema);
-    const outputValidator = compileValidator(ajv, descriptor.outputSchema);
+    const inputSchema = normalizeToolSchema(
+      descriptor.inputSchema,
+      "input",
+      originalName,
+    );
+    const outputSchema = normalizeToolSchema(
+      descriptor.outputSchema,
+      "output",
+      originalName,
+    );
+    const inputValidator = compileValidator(ajv, inputSchema);
+    const outputValidator = compileValidator(ajv, outputSchema);
 
     resolvedTools[safeName] = {
       description: descriptor.description,
@@ -167,16 +178,16 @@ export function resolveProvider(provider: ToolProvider): ResolvedToolProvider {
           );
         }
       },
-      inputSchema: descriptor.inputSchema,
+      inputSchema,
       originalName,
-      outputSchema: descriptor.outputSchema,
+      outputSchema,
       safeName,
     };
 
     typegenTools[safeName] = {
       description: descriptor.description,
-      inputSchema: descriptor.inputSchema,
-      outputSchema: descriptor.outputSchema,
+      inputSchema,
+      outputSchema,
     };
   }
 
