@@ -1,36 +1,42 @@
 # mcploom
 
-Production infrastructure and execution tooling for the [Model Context Protocol](https://modelcontextprotocol.io/) (MCP).
+Production building blocks for [Model Context Protocol](https://modelcontextprotocol.io/) apps.
+Observe MCP traffic, proxy multiple backends behind one endpoint, and execute sandboxed code against tool catalogs.
 
-## Packages
+[![CI](https://img.shields.io/github/actions/workflow/status/aallam/mcploom/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/aallam/mcploom/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/aallam/mcploom?style=flat-square)](https://github.com/aallam/mcploom/blob/main/LICENSE)
+[![Packages](https://img.shields.io/badge/packages-5-111827?style=flat-square)](#package-map)
+[![Examples](https://img.shields.io/badge/examples-runnable-0ea5e9?style=flat-square)](./examples/README.md)
 
-| Package                                                           | Description                                                                    |
-| ----------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| [`@mcploom/analytics`](./packages/analytics/)                     | Lightweight analytics and observability for MCP servers                        |
-| [`@mcploom/proxy`](./packages/proxy/)                             | MCP proxy for production apps, routing, middleware, and stdio-to-HTTP bridging |
-| [`@mcploom/codexec`](./packages/codexec/)                         | Executor-agnostic MCP code execution core and MCP adapters                     |
-| [`@mcploom/codexec-quickjs`](./packages/codexec-quickjs/)         | QuickJS executor backend for codexec                                           |
-| [`@mcploom/codexec-isolated-vm`](./packages/codexec-isolated-vm/) | `isolated-vm` executor backend for codexec                                     |
+## Package Map
 
-## Quick Start
+| Package                                                           | npm                                                                                                                                                     | What it is for                                                   | Examples                                                                                                                                                       |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`@mcploom/analytics`](./packages/analytics/)                     | [![npm](https://img.shields.io/npm/v/%40mcploom%2Fanalytics?style=flat-square)](https://www.npmjs.com/package/@mcploom/analytics)                       | Transport- and handler-level analytics for MCP servers           | [`analytics-track-handlers.ts`](./examples/analytics-track-handlers.ts)<br>[`analytics-instrument-transport.ts`](./examples/analytics-instrument-transport.ts) |
+| [`@mcploom/proxy`](./packages/proxy/)                             | [![npm](https://img.shields.io/npm/v/%40mcploom%2Fproxy?style=flat-square)](https://www.npmjs.com/package/@mcploom/proxy)                               | Aggregate backends, route tools, and apply middleware            | [`proxy-basic.ts`](./examples/proxy-basic.ts)<br>[`proxy-middleware.ts`](./examples/proxy-middleware.ts)                                                       |
+| [`@mcploom/codexec`](./packages/codexec/)                         | [![npm](https://img.shields.io/npm/v/%40mcploom%2Fcodexec?style=flat-square)](https://www.npmjs.com/package/@mcploom/codexec)                           | Executor-agnostic core for sandboxed JavaScript and MCP wrapping | [`codexec-basic.ts`](./examples/codexec-basic.ts)<br>[`codexec-mcp-server.ts`](./examples/codexec-mcp-server.ts)                                               |
+| [`@mcploom/codexec-quickjs`](./packages/codexec-quickjs/)         | [![npm](https://img.shields.io/npm/v/%40mcploom%2Fcodexec--quickjs?style=flat-square)](https://www.npmjs.com/package/@mcploom/codexec-quickjs)          | QuickJS backend for codexec                                      | [`codexec-basic.ts`](./examples/codexec-basic.ts)                                                                                                              |
+| [`@mcploom/codexec-isolated-vm`](./packages/codexec-isolated-vm/) | [![npm](https://img.shields.io/npm/v/%40mcploom%2Fcodexec--isolated--vm?style=flat-square)](https://www.npmjs.com/package/@mcploom/codexec-isolated-vm) | `isolated-vm` backend for codexec                                | [`codexec-isolated-vm-basic.ts`](./examples/codexec-isolated-vm-basic.ts)                                                                                      |
 
-```ts
-import { McpAnalytics } from "@mcploom/analytics";
-import { McpProxy } from "@mcploom/proxy";
-import { resolveProvider } from "@mcploom/codexec";
-import { QuickJsExecutor } from "@mcploom/codexec-quickjs";
-```
+## What Lives Here
 
-The analytics and proxy packages cover production MCP infrastructure. The codexec family provides sandboxed code execution with pluggable executors and MCP tool-wrapping adapters.
+- `analytics` adds visibility to MCP traffic with transport instrumentation, handler wrapping, exporters, and in-memory stats.
+- `proxy` gives you a programmable control layer for MCP backends: routing, middleware, caching, and HTTP exposure.
+- `codexec` turns tool catalogs into safe callable namespaces for sandboxed JavaScript, with pluggable executor packages.
 
-## Install
+## Examples
 
-```bash
-npm install @mcploom/analytics @mcploom/proxy
-npm install @mcploom/codexec @mcploom/codexec-quickjs
-```
+Runnable examples live in [`examples/`](./examples/) and are indexed in [`examples/README.md`](./examples/README.md).
 
-Add `@mcploom/codexec-isolated-vm` only when you want the native `isolated-vm` backend.
+- Standard examples: `npm run examples`
+- Native `isolated-vm` lane: `npm run verify:isolated-vm`
+
+Good starting points:
+
+- [`examples/analytics-track-handlers.ts`](./examples/analytics-track-handlers.ts)
+- [`examples/proxy-basic.ts`](./examples/proxy-basic.ts)
+- [`examples/codexec-basic.ts`](./examples/codexec-basic.ts)
+- [`examples/codexec-mcp-server.ts`](./examples/codexec-mcp-server.ts)
 
 ## Development
 
@@ -43,10 +49,4 @@ npm run typecheck
 npm run examples
 ```
 
-`@mcploom/codexec-isolated-vm` is verified separately because it depends on the native `isolated-vm` addon and requires `--no-node-snapshot` on Node 20+:
-
-```bash
-npm run verify:isolated-vm
-```
-
-See [examples/](./examples/) for runnable package examples, including MCP wrapping flows for codexec.
+Use `npm run verify:isolated-vm` when working on the native executor package.

@@ -2,6 +2,19 @@
 
 A control layer between MCP clients and backends — aggregate multiple [Model Context Protocol](https://modelcontextprotocol.io/) servers behind a single endpoint with routing, middleware, and caching.
 
+[![npm version](https://img.shields.io/npm/v/%40mcploom%2Fproxy?style=flat-square)](https://www.npmjs.com/package/@mcploom/proxy)
+[![License](https://img.shields.io/github/license/aallam/mcploom?style=flat-square)](https://github.com/aallam/mcploom/blob/main/LICENSE)
+[![Examples](https://img.shields.io/badge/examples-proxy-0ea5e9?style=flat-square)](https://github.com/aallam/mcploom/tree/main/examples)
+[![CI](https://img.shields.io/github/actions/workflow/status/aallam/mcploom/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/aallam/mcploom/actions/workflows/ci.yml)
+
+## Examples
+
+- [Basic multi-backend proxy](https://github.com/aallam/mcploom/blob/main/examples/proxy-basic.ts)
+- [Middleware patterns](https://github.com/aallam/mcploom/blob/main/examples/proxy-middleware.ts)
+- [Express integration](https://github.com/aallam/mcploom/blob/main/examples/proxy-express.ts)
+- [Combine proxying with analytics](https://github.com/aallam/mcploom/blob/main/examples/proxy-with-analytics.ts)
+- [Full examples index](https://github.com/aallam/mcploom/tree/main/examples)
+
 ## Why use a proxy?
 
 MCP clients like Claude Desktop and Cursor already support connecting to multiple MCP servers natively. For personal use, just add your servers directly — no proxy needed.

@@ -1,6 +1,25 @@
 # @mcploom/codexec-isolated-vm
 
-`isolated-vm` executor package for `@mcploom/codexec`.
+`isolated-vm` executor backend for `@mcploom/codexec`.
+
+[![npm version](https://img.shields.io/npm/v/%40mcploom%2Fcodexec--isolated--vm?style=flat-square)](https://www.npmjs.com/package/@mcploom/codexec-isolated-vm)
+[![License](https://img.shields.io/github/license/aallam/mcploom?style=flat-square)](https://github.com/aallam/mcploom/blob/main/LICENSE)
+[![Examples](https://img.shields.io/badge/examples-codexec-0ea5e9?style=flat-square)](https://github.com/aallam/mcploom/tree/main/examples)
+[![CI](https://img.shields.io/github/actions/workflow/status/aallam/mcploom/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/aallam/mcploom/actions/workflows/ci.yml)
+
+## Choose `isolated-vm` When
+
+- you explicitly want the `isolated-vm` runtime instead of QuickJS
+- your environment can support the native addon install
+- you are prepared to run Node 20+ with `--no-node-snapshot`
+
+If you want the simpler default backend, use [`@mcploom/codexec-quickjs`](https://www.npmjs.com/package/@mcploom/codexec-quickjs) instead.
+
+## Examples
+
+- [Basic provider execution on `isolated-vm`](https://github.com/aallam/mcploom/blob/main/examples/codexec-isolated-vm-basic.ts)
+- [QuickJS-based codexec examples for the shared API surface](https://github.com/aallam/mcploom/blob/main/examples/codexec-basic.ts)
+- [Full examples index](https://github.com/aallam/mcploom/tree/main/examples)
 
 ## Install
 
@@ -8,13 +27,11 @@
 npm install @mcploom/codexec @mcploom/codexec-isolated-vm
 ```
 
-It implements the shared `Executor` contract from `@mcploom/codexec`, so it can be used anywhere the QuickJS package can be used.
-
 ## Requirements
 
 - Node 20+ must run with `--no-node-snapshot`
 - the optional `isolated-vm` native dependency must install successfully in the host environment
-- native-addon failures are surfaced only when `IsolatedVmExecutor` is used
+- native-addon failures are surfaced when `IsolatedVmExecutor` is constructed or used
 
 ## Usage
 
@@ -42,4 +59,4 @@ This package is verified through the opt-in workspace flow:
 npm run verify:isolated-vm
 ```
 
-`isolated-vm` is not documented here as a hard security boundary. If the workload is hostile or process stability matters more than in-process performance, prefer process isolation around the executor.
+`isolated-vm` is not documented here as a hard security boundary. If process stability matters more than in-process performance, prefer process isolation around the executor.
