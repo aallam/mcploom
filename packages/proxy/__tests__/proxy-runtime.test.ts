@@ -146,7 +146,9 @@ const mocks = vi.hoisted(() => {
     }> {
       const chunks =
         opts.rawChunks ??
-        (opts.body !== undefined ? [Buffer.from(JSON.stringify(opts.body))] : []);
+        (opts.body !== undefined
+          ? [Buffer.from(JSON.stringify(opts.body))]
+          : []);
       const req = {
         url: opts.path,
         method: opts.method,
@@ -162,7 +164,10 @@ const mocks = vi.hoisted(() => {
       let body = "";
       const headers: Record<string, string> = {};
       const res = {
-        writeHead: (status: number, responseHeaders?: Record<string, string>) => {
+        writeHead: (
+          status: number,
+          responseHeaders?: Record<string, string>,
+        ) => {
           statusCode = status;
           if (responseHeaders) {
             Object.assign(headers, responseHeaders);
@@ -185,9 +190,7 @@ const mocks = vi.hoisted(() => {
     callToolCalls: Array<[string, Record<string, unknown>]> = [];
     throwOnCallTool: Error | undefined;
 
-    constructor(
-      private readonly name: string,
-    ) {
+    constructor(private readonly name: string) {
       backendInstances.set(name, this);
     }
 
@@ -247,7 +250,9 @@ const mocks = vi.hoisted(() => {
       }
 
       return {
-        content: [{ type: "text", text: `Result from ${this.name}:${toolName}` }],
+        content: [
+          { type: "text", text: `Result from ${this.name}:${toolName}` },
+        ],
       };
     }
 
@@ -413,7 +418,9 @@ describe("McpProxy runtime correctness", () => {
       });
 
       expect(response.statusCode).toBe(413);
-      expect(JSON.parse(response.body)).toEqual({ error: "Request body too large" });
+      expect(JSON.parse(response.body)).toEqual({
+        error: "Request body too large",
+      });
     } finally {
       await listener.close();
     }
@@ -480,7 +487,10 @@ describe("McpProxy runtime correctness", () => {
 
     const backend = mocks.backendInstances.get("backend");
     expect(backend).toBeDefined();
-    expect(backend!.callToolCalls).toContainEqual(["dynamic_tool", dynamicArgs]);
+    expect(backend!.callToolCalls).toContainEqual([
+      "dynamic_tool",
+      dynamicArgs,
+    ]);
   });
 
   it("returns non-text content blocks without corrupting required fields", async () => {

@@ -7,8 +7,8 @@
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createServer, type IncomingMessage } from "node:http";
 import { z } from "zod";
-import { McpProxy, cache } from "@gomcp/proxy";
-import { McpAnalytics } from "@gomcp/analytics";
+import { McpProxy, cache } from "@mcploom/proxy";
+import { McpAnalytics } from "@mcploom/analytics";
 import { startMockMcpServer, connectClient } from "./_helpers.js";
 
 const PROXY_PORT = 4400;
