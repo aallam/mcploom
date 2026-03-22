@@ -16,11 +16,14 @@
   },
   "include": [
     "examples/**/*.ts",
+    "examples/codexec-isolated-vm-basic.ts",
     "packages/analytics/**/*.ts",
     "packages/proxy/**/*.ts",
     "packages/codexec/**/*.ts",
     "packages/codexec-quickjs/**/*.ts",
-    "vitest.config.ts"
+    "packages/codexec-isolated-vm/**/*.ts",
+    "vitest.config.ts",
+    "vitest.isolated-vm.config.ts"
   ],
   "exclude": ["**/node_modules", "packages/*/dist"]
 }
