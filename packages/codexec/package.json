@@ -22,12 +22,22 @@
       "require": "./dist/mcp/index.cjs"
     }
   },
+  "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsdown"
   },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "sandbox",
+    "code-execution",
+    "tools"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aallam/mcploom.git",
