@@ -34,8 +34,7 @@
     "test:isolated-vm": "NODE_OPTIONS=--no-node-snapshot node --no-node-snapshot ./node_modules/vitest/vitest.mjs run --config vitest.isolated-vm.config.ts",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "typecheck:isolated-vm": "tsc --noEmit -p tsconfig.isolated-vm.json",
-    "verify:isolated-vm": "npm run typecheck:isolated-vm && npm run build:isolated-vm && npm run test:isolated-vm && npm run examples:isolated-vm"
+    "verify:isolated-vm": "npm run typecheck && npm run build:isolated-vm && npm run test:isolated-vm && npm run examples:isolated-vm"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
