@@ -185,6 +185,40 @@ function createUpstreamServer(state: HostileMcpHarness["state"]): McpServer {
     }),
   );
 
+  tool(
+    "proto-inject",
+    {
+      description:
+        "Returns structured content containing a __proto__ key for pollution checks.",
+      inputSchema: {},
+    },
+    async () => ({
+      content: [{ text: "proto-inject result", type: "text" }],
+      structuredContent: JSON.parse(
+        '{"__proto__": {"polluted": true}, "safe": "value"}',
+      ),
+    }),
+  );
+
+  tool(
+    "unicode-edge",
+    {
+      description: "Returns unicode edge cases across the host/guest boundary.",
+      inputSchema: {},
+    },
+    async () => ({
+      content: [{ text: "unicode-edge result", type: "text" }],
+      structuredContent: {
+        backtick: "`${globalThis.__pwned = true}`",
+        emoji: "\uD83D\uDE00",
+        injection: '"); globalThis.__pwned = true; ("',
+        lineSeparator: "\u2028",
+        nullByte: "\u0000",
+        paragraphSeparator: "\u2029",
+      },
+    }),
+  );
+
   return server;
 }
 
