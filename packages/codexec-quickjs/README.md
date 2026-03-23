@@ -4,8 +4,6 @@ QuickJS executor backend for `@mcploom/codexec`.
 
 [![npm version](https://img.shields.io/npm/v/%40mcploom%2Fcodexec--quickjs?style=flat-square)](https://www.npmjs.com/package/@mcploom/codexec-quickjs)
 [![License](https://img.shields.io/github/license/aallam/mcploom?style=flat-square)](https://github.com/aallam/mcploom/blob/main/LICENSE)
-[![Examples](https://img.shields.io/badge/examples-codexec-0ea5e9?style=flat-square)](https://github.com/aallam/mcploom/tree/main/examples)
-[![CI](https://img.shields.io/github/actions/workflow/status/aallam/mcploom/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/aallam/mcploom/actions/workflows/ci.yml)
 
 ## Choose QuickJS When
 

@@ -4,8 +4,6 @@ Lightweight analytics and observability for [Model Context Protocol](https://mod
 
 [![npm version](https://img.shields.io/npm/v/%40mcploom%2Fanalytics?style=flat-square)](https://www.npmjs.com/package/@mcploom/analytics)
 [![License](https://img.shields.io/github/license/aallam/mcploom?style=flat-square)](https://github.com/aallam/mcploom/blob/main/LICENSE)
-[![Examples](https://img.shields.io/badge/examples-analytics-0ea5e9?style=flat-square)](https://github.com/aallam/mcploom/tree/main/examples)
-[![CI](https://img.shields.io/github/actions/workflow/status/aallam/mcploom/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/aallam/mcploom/actions/workflows/ci.yml)
 
 ## Examples
 
