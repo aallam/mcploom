@@ -29,34 +29,16 @@ describe("isJsonSerializable DAG exponential blowup", () => {
     expect(elapsed).toBeLessThan(2000);
   });
 
-  it("exhibits exponential slowdown on DAGs with shared subtrees", () => {
-    // A DAG of depth 20 has only 21 unique objects, but because seen.delete(value)
-    // in the finally block clears visited nodes, isJsonSerializable revisits
-    // shared subtrees on every path: 2^20 = ~1M effective visits.
-    //
-    // Compare with a DAG of depth 10 which has 2^10 = ~1K visits.
-    // If the ratio is >> 1000x, the blowup is clearly exponential.
-    const smallDag = buildDag(10);
+  it("handles shared-subtree DAGs without pathological slowdown", () => {
     const largeDag = buildDag(20);
 
-    const startSmall = performance.now();
-    isJsonSerializable(smallDag);
-    const elapsedSmall = performance.now() - startSmall;
-
     const startLarge = performance.now();
-    isJsonSerializable(largeDag);
+    const result = isJsonSerializable(largeDag);
     const elapsedLarge = performance.now() - startLarge;
 
-    // Depth 10 should be near-instant (< 10ms)
-    // Depth 20 should take noticeably longer (hundreds of ms or more)
-    // The ratio demonstrates exponential growth: each added depth level doubles time.
-    //
-    // VULNERABILITY: A malicious MCP tool returning a DAG-shaped object causes
-    // isJsonSerializable (called in resolveProvider.ts:148) to block the host
-    // event loop for an exponentially growing duration.
-    expect(elapsedSmall).toBeLessThan(50);
-    expect(elapsedLarge).toBeGreaterThan(elapsedSmall * 100);
-  }, 30_000);
+    expect(result).toBe(true);
+    expect(elapsedLarge).toBeLessThan(200);
+  });
 
   it("correctly detects actual circular references", () => {
     const obj: Record<string, unknown> = { value: 1 };

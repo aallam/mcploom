@@ -26,12 +26,20 @@ export function createGuestErrorHandle(
   context: QuickJSContext,
   code: ExecuteErrorCode,
   message: string,
+  trustedHostErrorKey: string,
 ): QuickJSHandle {
   const errorHandle = context.newError({ message, name: "Error" });
   const codeHandle = context.newString(code);
-  context.setProp(errorHandle, "code", codeHandle);
-  codeHandle.dispose();
-  return errorHandle;
+  const trustedHostMarkerHandle = context.true;
+
+  try {
+    context.setProp(errorHandle, "code", codeHandle);
+    context.setProp(errorHandle, trustedHostErrorKey, trustedHostMarkerHandle);
+    return errorHandle;
+  } finally {
+    codeHandle.dispose();
+    trustedHostMarkerHandle.dispose();
+  }
 }
 
 export function fromGuestHandle(

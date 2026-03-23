@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import {
   ExecuteFailure,
   isExecuteFailure,
@@ -71,8 +73,6 @@ const DEFAULT_MEMORY_LIMIT_BYTES = 64 * 1024 * 1024;
 const DEFAULT_TIMEOUT_MS = 5000;
 const DEFAULT_MAX_LOG_LINES = 100;
 const DEFAULT_MAX_LOG_CHARS = 64_000;
-const HOST_ERROR_PREFIX = "__MCP_CODE_EXEC_HOST_ERROR__";
-
 let cachedModulePromise: Promise<IsolatedVmModule> | undefined;
 
 function createExecutionContext(
@@ -340,32 +340,53 @@ async function loadDefaultModule(): Promise<IsolatedVmModule> {
 
 function createBootstrapSource(
   providers: ResolvedToolProvider[],
+  hostErrorPrefix: string,
   timeoutMs: number,
 ): string {
   const lines = [
-    `const __MCP_HOST_ERROR_PREFIX = ${JSON.stringify(HOST_ERROR_PREFIX)};`,
-    "const __mcpNormalizeError = (error) => {",
-    "  if (error && typeof error === 'object' && typeof error.code === 'string' && typeof error.message === 'string') {",
-    "    return { code: error.code, message: error.message };",
+    `const __MCP_HOST_ERROR_PREFIX = ${JSON.stringify(hostErrorPrefix)};`,
+    `const __MCP_HOST_ERROR_KEY = ${JSON.stringify(`${hostErrorPrefix}key`)};`,
+    "const __mcpCreateTrustedError = (code, message) => ({",
+    "  [__MCP_HOST_ERROR_KEY]: true,",
+    "  code,",
+    "  message,",
+    "});",
+    "const __mcpNormalizeTrustedError = (error) => {",
+    "  if (error && typeof error === 'object' && error[__MCP_HOST_ERROR_KEY] === true && typeof error.code === 'string' && typeof error.message === 'string') {",
+    "    return __mcpCreateTrustedError(error.code, error.message);",
     "  }",
     "  if (error && typeof error.message === 'string' && error.message.startsWith(__MCP_HOST_ERROR_PREFIX)) {",
     "    try {",
     "      const payload = JSON.parse(error.message.slice(__MCP_HOST_ERROR_PREFIX.length));",
     "      if (payload && typeof payload.code === 'string' && typeof payload.message === 'string') {",
-    "        return payload;",
+    "        return __mcpCreateTrustedError(payload.code, payload.message);",
     "      }",
     "    } catch {}",
+    "  }",
+    "  return null;",
+    "};",
+    "const __mcpNormalizeGuestError = (error) => {",
+    "  const trusted = __mcpNormalizeTrustedError(error);",
+    "  if (trusted) {",
+    "    return trusted;",
     "  }",
     "  if (error && typeof error.message === 'string') {",
     "    return { code: 'runtime_error', message: error.message };",
     "  }",
     "  return { code: 'runtime_error', message: String(error) };",
     "};",
+    "const __mcpNormalizeHostError = (error) => {",
+    "  const trusted = __mcpNormalizeTrustedError(error);",
+    "  if (trusted) {",
+    "    return trusted;",
+    "  }",
+    "  if (error && typeof error === 'object' && typeof error.code === 'string' && typeof error.message === 'string') {",
+    "    return __mcpCreateTrustedError(error.code, error.message);",
+    "  }",
+    "  return __mcpNormalizeGuestError(error);",
+    "};",
     "const __mcpRaiseNormalizedError = (error) => {",
-    "  const normalized = __mcpNormalizeError(error);",
-    "  const wrapped = new Error(normalized.message);",
-    "  wrapped.code = normalized.code;",
-    "  throw wrapped;",
+    "  throw __mcpNormalizeHostError(error);",
     "};",
     "const __mcpToJsonValue = (value) => {",
     "  if (typeof value === 'undefined') {",
@@ -373,9 +394,10 @@ function createBootstrapSource(
     "  }",
     "  const json = JSON.stringify(value);",
     "  if (typeof json === 'undefined') {",
-    "    const error = new Error('Guest code returned a non-serializable value');",
-    "    error.code = 'serialization_error';",
-    "    throw error;",
+    "    throw __mcpCreateTrustedError(",
+    "      'serialization_error',",
+    "      'Guest code returned a non-serializable value'",
+    "    );",
     "  }",
     "  return JSON.parse(json);",
     "};",
@@ -417,7 +439,7 @@ function createExecutionSource(code: string): string {
     "    const value = await __mcpUserFunction();",
     "    return { ok: true, value: __mcpToJsonValue(value) };",
     "  } catch (error) {",
-    "    return { ok: false, error: __mcpNormalizeError(error) };",
+    "    return { ok: false, error: __mcpNormalizeGuestError(error) };",
     "  }",
     "})();",
   ].join("\n");
@@ -445,6 +467,7 @@ function setProviderBindings(
   providers: ResolvedToolProvider[],
   signal: AbortSignal,
   deadline: number,
+  hostErrorPrefix: string,
 ): void {
   const jail = context.global;
 
@@ -470,10 +493,16 @@ function setProviderBindings(
                     input,
                     "Guest code passed a non-serializable tool input",
                   );
+            const pendingExecution = Promise.resolve(
+              descriptor.execute(normalizedInput, executionContext),
+            );
+
+            pendingExecution.catch(() => {
+              // The deadline path may settle first; keep late provider rejections from
+              // surfacing as unhandled promise rejections after timeout/abort.
+            });
             const result = await runWithDeadline(
-              Promise.resolve(
-                descriptor.execute(normalizedInput, executionContext),
-              ),
+              pendingExecution,
               deadline,
               signal,
             );
@@ -482,7 +511,7 @@ function setProviderBindings(
           } catch (error) {
             const executeError = toExecuteError(error, deadline);
             throw new Error(
-              `${HOST_ERROR_PREFIX}${JSON.stringify(executeError)}`,
+              `${hostErrorPrefix}${JSON.stringify(executeError)}`,
               {
                 cause: error,
               },
@@ -530,6 +559,7 @@ export class IsolatedVmExecutor implements Executor {
     const deadline = startedAt + this.timeoutMs;
     const logs: string[] = [];
     const abortController = new AbortController();
+    const hostErrorPrefix = `__MCP_CODE_EXEC_HOST_ERROR__${randomUUID()}:`;
     const nodeMajorVersion = Number.parseInt(
       process.versions.node.split(".")[0] ?? "0",
       10,
@@ -570,10 +600,14 @@ export class IsolatedVmExecutor implements Executor {
         providers,
         abortController.signal,
         deadline,
+        hostErrorPrefix,
       );
-      await context.eval(createBootstrapSource(providers, this.timeoutMs), {
-        timeout: this.timeoutMs,
-      });
+      await context.eval(
+        createBootstrapSource(providers, hostErrorPrefix, this.timeoutMs),
+        {
+          timeout: this.timeoutMs,
+        },
+      );
 
       const execution = (await context.evalClosure(
         createExecutionSource(code),
