@@ -7,6 +7,9 @@ import { BaseBackendClient } from "./base.js";
  * Manages a connection to a local MCP server via stdio subprocess.
  */
 export class StdioBackendClient extends BaseBackendClient<StdioClientTransport> {
+  /**
+   * Creates a stdio backend client for a named MCP server subprocess.
+   */
   constructor(
     name: string,
     private readonly config: StdioBackendConfig,
@@ -14,6 +17,9 @@ export class StdioBackendClient extends BaseBackendClient<StdioClientTransport> 
     super(name);
   }
 
+  /**
+   * Connects the client by spawning the configured stdio subprocess.
+   */
   async connect(): Promise<void> {
     const transport = new StdioClientTransport({
       command: this.config.command,

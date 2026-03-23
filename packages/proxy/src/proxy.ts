@@ -40,6 +40,9 @@ export class McpProxy {
   private readonly middleware: ProxyMiddleware[];
   private readonly toolIndex = new Map<string, ToolInfo>();
 
+  /**
+   * Creates a proxy instance from backend, routing, and middleware configuration.
+   */
   constructor(config: ProxyConfig) {
     this.config = config;
     this.router = new Router(config.routing);

@@ -18,6 +18,9 @@ export function globToRegex(pattern: string): RegExp {
 export class Router {
   private readonly compiled: Array<{ regex: RegExp; server: string }>;
 
+  /**
+   * Compiles routing rules into regex matchers in declaration order.
+   */
   constructor(rules: RoutingRule[]) {
     this.compiled = rules.map((rule) => ({
       regex: globToRegex(rule.pattern),

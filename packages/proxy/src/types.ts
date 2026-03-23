@@ -103,12 +103,18 @@ export interface ToolInfo {
   backend: string;
 }
 
+/**
+ * Returns whether a backend config targets a Streamable HTTP server.
+ */
 export function isHttpConfig(
   config: BackendConfig,
 ): config is HttpBackendConfig {
   return "url" in config;
 }
 
+/**
+ * Returns whether a backend config targets a stdio subprocess server.
+ */
 export function isStdioConfig(
   config: BackendConfig,
 ): config is StdioBackendConfig {

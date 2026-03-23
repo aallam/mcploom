@@ -6,6 +6,9 @@ import type { ExecuteErrorCode } from "./types";
 export class ExecuteFailure extends Error {
   code: ExecuteErrorCode;
 
+  /**
+   * Creates a structured failure with a trusted executor or tool error code.
+   */
   constructor(code: ExecuteErrorCode, message: string) {
     super(message);
     this.code = code;

@@ -7,6 +7,9 @@ import { BaseBackendClient } from "./base.js";
  * Manages a connection to a remote MCP server via Streamable HTTP.
  */
 export class HttpBackendClient extends BaseBackendClient<StreamableHTTPClientTransport> {
+  /**
+   * Creates an HTTP backend client for a named MCP server.
+   */
   constructor(
     name: string,
     private readonly config: HttpBackendConfig,
@@ -14,6 +17,9 @@ export class HttpBackendClient extends BaseBackendClient<StreamableHTTPClientTra
     super(name);
   }
 
+  /**
+   * Connects the client using the configured Streamable HTTP endpoint and headers.
+   */
   async connect(): Promise<void> {
     const transport = new StreamableHTTPClientTransport(
       new URL(this.config.url),

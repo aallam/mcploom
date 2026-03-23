@@ -534,6 +534,9 @@ export class IsolatedVmExecutor implements Executor {
   private readonly memoryLimitBytes: number;
   private readonly timeoutMs: number;
 
+  /**
+   * Creates an isolated-vm executor with one-shot runtime limits and host bridging configuration.
+   */
   constructor(options: IsolatedVmExecutorOptions = {}) {
     this.loadModule = async () => {
       const loaded = options.loadModule

@@ -50,6 +50,9 @@ export class Collector {
   private readonly toolWindowSize: number;
   private readonly onFlushError: (error: unknown) => void;
 
+  /**
+   * Creates an event collector with bounded buffering and optional periodic flushing.
+   */
   constructor(
     private readonly maxBufferSize: number,
     private readonly exporter: ExporterFn,

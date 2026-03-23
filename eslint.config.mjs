@@ -4,22 +4,6 @@ import jsdoc from "eslint-plugin-jsdoc";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-const publicApiFiles = [
-  "packages/codexec/src/errors.ts",
-  "packages/codexec/src/normalize.ts",
-  "packages/codexec/src/sanitize.ts",
-  "packages/codexec/src/types.ts",
-  "packages/codexec/src/executor/executor.ts",
-  "packages/codexec/src/provider/resolveProvider.ts",
-  "packages/codexec/src/typegen/jsonSchema.ts",
-  "packages/codexec/src/mcp/createMcpToolProvider.ts",
-  "packages/codexec/src/mcp/codeMcpServer.ts",
-  "packages/codexec-quickjs/src/types.ts",
-  "packages/codexec-quickjs/src/quickjsExecutor.ts",
-  "packages/codexec-isolated-vm/src/types.ts",
-  "packages/codexec-isolated-vm/src/isolatedVmExecutor.ts",
-];
-
 export default tseslint.config(
   {
     ignores: [
@@ -58,7 +42,7 @@ export default tseslint.config(
     },
   },
   {
-    files: publicApiFiles,
+    files: ["packages/*/src/**/*.ts"],
     plugins: {
       jsdoc,
     },
@@ -77,7 +61,8 @@ export default tseslint.config(
             "ExportNamedDeclaration > FunctionDeclaration",
             "ExportNamedDeclaration > TSInterfaceDeclaration",
             "ExportNamedDeclaration > TSTypeAliasDeclaration",
-            "ExportNamedDeclaration > ClassDeclaration > ClassBody > MethodDefinition[key.name='execute']",
+            "ExportNamedDeclaration > VariableDeclaration",
+            "ExportNamedDeclaration > ClassDeclaration > ClassBody > MethodDefinition:not([accessibility='private'])",
           ],
           publicOnly: false,
           require: {
