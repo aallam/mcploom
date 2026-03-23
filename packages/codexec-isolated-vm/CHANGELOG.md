@@ -1,5 +1,16 @@
 # @mcploom/codexec-isolated-vm
 
+## 0.1.3
+
+### Patch Changes
+
+- Refresh the published package docs and generated API declarations.
+
+  This release picks up the README updates, broader JSDoc coverage on exported package APIs, and the lint/CI hardening that now enforces those docs consistently.
+
+- Updated dependencies
+  - @mcploom/codexec@0.2.2
+
 ## 0.1.2
 
 ### Patch Changes
