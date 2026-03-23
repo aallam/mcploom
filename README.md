@@ -3,10 +3,8 @@
 Production building blocks for [Model Context Protocol](https://modelcontextprotocol.io/) apps.
 Observe MCP traffic, proxy multiple backends behind one endpoint, and execute guest code against tool catalogs.
 
-[![CI](https://img.shields.io/github/actions/workflow/status/aallam/mcploom/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/aallam/mcploom/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/aallam/mcploom?style=flat-square)](https://github.com/aallam/mcploom/blob/main/LICENSE)
 [![Packages](https://img.shields.io/badge/packages-5-111827?style=flat-square)](#package-map)
-[![Examples](https://img.shields.io/badge/examples-runnable-0ea5e9?style=flat-square)](./examples/README.md)
 
 ## Package Map
 
