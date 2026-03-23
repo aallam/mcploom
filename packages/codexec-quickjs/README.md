@@ -17,7 +17,7 @@ QuickJS executor backend for `@mcploom/codexec`.
 
 - Each execution gets a fresh QuickJS runtime with no ambient Node globals injected by codexec.
 - Tool calls cross a JSON-only bridge, and executor timeouts propagate abort signals to in-flight provider work.
-- The default threat model assumes provider definitions are controlled by the host application; hostile users control guest code and tool inputs.
+- In the default deployment model, provider definitions are controlled by the host application, while hostile users control guest code and tool inputs.
 - This package is not presented as a hard security boundary for hostile code. It is best-effort in-process isolation.
 - If you need a stronger boundary, run codexec behind a separate process or container.
 

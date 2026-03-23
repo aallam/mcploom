@@ -30,7 +30,6 @@ Executor-agnostic core for guest JavaScript that can call host tools directly or
 - [Expose MCP code-execution tools from a server](https://github.com/aallam/mcploom/blob/main/examples/codexec-mcp-server.ts)
 - [Run the same flow on `isolated-vm`](https://github.com/aallam/mcploom/blob/main/examples/codexec-isolated-vm-basic.ts)
 - [Full examples index](https://github.com/aallam/mcploom/tree/main/examples)
-- [Threat model and release guidance](https://github.com/aallam/mcploom/tree/main/docs/security)
 
 ## Install
 
@@ -48,7 +47,6 @@ Swap in `@mcploom/codexec-isolated-vm` when you want the native executor instead
 - In the default deployment model, provider and MCP tool definitions are controlled by the application, not by the end user.
 - Third-party MCP integrations should be reviewed as dependency-trust decisions, not folded into the primary end-user attacker model.
 - If the code source is hostile, run codexec behind stronger isolation such as a separate process, container, or VM.
-- Threat model: [`docs/security/codexec-threat-model.md`](https://github.com/aallam/mcploom/blob/main/docs/security/codexec-threat-model.md)
 
 ## Exports
 

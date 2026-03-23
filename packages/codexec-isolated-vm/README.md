@@ -36,7 +36,7 @@ npm install @mcploom/codexec @mcploom/codexec-isolated-vm
 ## Security Notes
 
 - Each execution gets a fresh `isolated-vm` context with JSON-only tool and result boundaries.
-- The default threat model assumes provider definitions are controlled by the host application; hostile users control guest code and tool inputs.
+- In the default deployment model, provider definitions are controlled by the host application, while hostile users control guest code and tool inputs.
 - This package is still in-process execution. It should not be marketed or relied on as a hard security boundary for hostile code.
 - Providers remain the real capability boundary. If a tool is dangerous, guest code can invoke it.
 
