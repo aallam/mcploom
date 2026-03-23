@@ -8,7 +8,11 @@ function isIdentifier(value: string): boolean {
   return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(value);
 }
 
-function indent(value: string, level = 1): string {
+
+/**
+ * Indents each line of the given string by a specified number of levels (default is 1).
+ */
+export function indent(value: string, level = 1): string {
   return value
     .split("\n")
     .map((line) => `${"  ".repeat(level)}${line}`)
