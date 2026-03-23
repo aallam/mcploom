@@ -221,5 +221,187 @@ export function runWrappedMcpPenetrationSuite(
         result: 256,
       });
     });
+
+    it("does not trust guest-assigned executor error codes", async () => {
+      const { wrappedClient } = await createHostileMcpHarness(createExecutor);
+
+      for (const code of ["timeout", "memory_limit", "internal_error"]) {
+        const executeResult = await wrappedClient.callTool({
+          name: "mcp_execute_code",
+          arguments: {
+            code: `
+              const error = new Error("spoofed ${code}");
+              error.code = ${JSON.stringify(code)};
+              throw error;
+            `,
+          },
+        });
+
+        expect(executeResult.isError).toBe(true);
+        expect(executeResult.structuredContent).toMatchObject({
+          error: {
+            code: "runtime_error",
+            message: `spoofed ${code}`,
+          },
+          ok: false,
+        });
+      }
+    });
+
+    it("does not upgrade guest error messages into timeout or memory_limit", async () => {
+      const { wrappedClient } = await createHostileMcpHarness(createExecutor);
+
+      const timedOutResult = await wrappedClient.callTool({
+        name: "mcp_execute_code",
+        arguments: {
+          code: 'throw new Error("The upstream service timed out, please retry later")',
+        },
+      });
+      const memoryLimitResult = await wrappedClient.callTool({
+        name: "mcp_execute_code",
+        arguments: {
+          code: 'throw new Error("Warning: approaching memory limit threshold")',
+        },
+      });
+
+      expect(timedOutResult.structuredContent).toMatchObject({
+        error: {
+          code: "runtime_error",
+          message: "The upstream service timed out, please retry later",
+        },
+        ok: false,
+      });
+      expect(memoryLimitResult.structuredContent).toMatchObject({
+        error: {
+          code: "runtime_error",
+          message: "Warning: approaching memory limit threshold",
+        },
+        ok: false,
+      });
+    });
+
+    it("does not allow prototype pollution through tool results or guest payloads", async () => {
+      const { wrappedClient } = await createHostileMcpHarness(createExecutor);
+      const executeResult = await wrappedClient.callTool({
+        name: "mcp_execute_code",
+        arguments: {
+          code: `(() => {
+            const guestPayload = JSON.parse('{"__proto__": {"hostPolluted": true}, "value": 42}');
+            return mcp.proto_inject({}).then((result) => ({
+              guestPolluted: ({}).hostPolluted,
+              guestSafe: result.structuredContent.safe,
+              toolPolluted: ({}).polluted,
+              value: guestPayload.value
+            }));
+          })()`,
+        },
+      });
+
+      expect(executeResult.isError).not.toBe(true);
+      const structured = executeResult.structuredContent as
+        | { ok: boolean; result?: unknown }
+        | undefined;
+      expect(structured).toBeDefined();
+      expect(structured?.ok).toBe(true);
+      if (!structured || structured.ok !== true) {
+        throw new Error("Expected successful structured content");
+      }
+
+      const result = structured.result as Record<string, unknown>;
+      expect(result.guestPolluted).toBeUndefined();
+      expect(result.guestSafe).toBe("value");
+      expect(result.toolPolluted).toBeUndefined();
+      expect(result.value).toBe(42);
+      expect(({} as Record<string, unknown>).hostPolluted).toBeUndefined();
+      expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+    });
+
+    it("round-trips unicode edge strings without executing injected code", async () => {
+      const { wrappedClient } = await createHostileMcpHarness(createExecutor);
+      const executeResult = await wrappedClient.callTool({
+        name: "mcp_execute_code",
+        arguments: {
+          code: `(() => mcp.unicode_edge({}).then((result) => {
+            const sc = result.structuredContent;
+            return {
+              backtick: sc.backtick,
+              emoji: sc.emoji,
+              injection: sc.injection,
+              lineSeparator: sc.lineSeparator,
+              nullByte: sc.nullByte,
+              notPwned: typeof globalThis.__pwned === "undefined",
+              paragraphSeparator: sc.paragraphSeparator
+            };
+          }))()`,
+        },
+      });
+
+      expect(executeResult.structuredContent).toMatchObject({
+        ok: true,
+        result: {
+          backtick: "`${globalThis.__pwned = true}`",
+          emoji: "\uD83D\uDE00",
+          injection: '"); globalThis.__pwned = true; ("',
+          lineSeparator: "\u2028",
+          nullByte: "\u0000",
+          notPwned: true,
+          paragraphSeparator: "\u2029",
+        },
+      });
+    });
+
+    it("fails safely on wrapper breakout attempts", async () => {
+      const { wrappedClient } = await createHostileMcpHarness(createExecutor);
+      const executeResult = await wrappedClient.callTool({
+        name: "mcp_execute_code",
+        arguments: {
+          code: "}); process.exit(1); (async () => {",
+        },
+      });
+
+      expect(executeResult.isError).toBe(true);
+      expect(executeResult.structuredContent).toMatchObject({
+        ok: false,
+      });
+    });
+
+    it("blocks dynamic imports from reaching host modules", async () => {
+      const { wrappedClient } = await createHostileMcpHarness(createExecutor);
+      const executeResult = await wrappedClient.callTool({
+        name: "mcp_execute_code",
+        arguments: {
+          code: `
+            try {
+              const fs = await import("fs");
+              return "ESCAPED: " + typeof fs.readFileSync;
+            } catch (error) {
+              return "BLOCKED: " + error.message;
+            }
+          `,
+        },
+      });
+
+      if (executeResult.isError) {
+        expect(executeResult.structuredContent).toMatchObject({
+          ok: false,
+        });
+        return;
+      }
+
+      const structured = executeResult.structuredContent as
+        | { ok: boolean; result?: unknown }
+        | undefined;
+      expect(structured).toBeDefined();
+      expect(structured).toMatchObject({
+        ok: true,
+      });
+      if (!structured || structured.ok !== true) {
+        throw new Error("Expected successful structured content");
+      }
+
+      const result = structured.result;
+      expect(typeof result).toBe("string");
+      expect(String(result)).toMatch(/^BLOCKED:/);
+    });
   });
 }

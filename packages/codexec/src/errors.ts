@@ -25,7 +25,8 @@ export function isExecuteFailure(value: unknown): value is ExecuteFailure {
  */
 export function isJsonSerializable(
   value: unknown,
-  seen = new Set<unknown>(),
+  active = new Set<object>(),
+  memo = new WeakSet<object>(),
 ): boolean {
   if (value === null) {
     return true;
@@ -43,15 +44,25 @@ export function isJsonSerializable(
     case "undefined":
       return false;
     case "object": {
-      if (seen.has(value)) {
+      const objectValue = value as object;
+
+      if (memo.has(objectValue)) {
+        return true;
+      }
+
+      if (active.has(objectValue)) {
         return false;
       }
 
-      seen.add(value);
+      active.add(objectValue);
+      let isSerializable = false;
 
       try {
         if (Array.isArray(value)) {
-          return value.every((item) => isJsonSerializable(item, seen));
+          isSerializable = value.every((item) =>
+            isJsonSerializable(item, active, memo),
+          );
+          return isSerializable;
         }
 
         const prototype = Object.getPrototypeOf(value);
@@ -59,11 +70,15 @@ export function isJsonSerializable(
           return false;
         }
 
-        return Object.values(value).every((item) =>
-          isJsonSerializable(item, seen),
+        isSerializable = Object.values(value).every((item) =>
+          isJsonSerializable(item, active, memo),
         );
+        return isSerializable;
       } finally {
-        seen.delete(value);
+        active.delete(objectValue);
+        if (isSerializable) {
+          memo.add(objectValue);
+        }
       }
     }
   }

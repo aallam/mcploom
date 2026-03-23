@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import {
   RELEASE_SYNC,
   isFail,
@@ -93,32 +95,38 @@ function toExecuteError(error: unknown, deadline: number): ExecuteError {
 function errorFromGuestHandle(
   context: QuickJSContext,
   handle: QuickJSHandle,
-  deadline: number,
+  trustedHostErrorKey: string,
 ): ExecuteError {
   const codeHandle = context.getProp(handle, "code");
   const messageHandle = context.getProp(handle, "message");
+  const trustedMarkerHandle = context.getProp(handle, trustedHostErrorKey);
 
   try {
     const code =
       context.typeof(codeHandle) === "string"
         ? context.getString(codeHandle)
         : undefined;
+    const trustedHostError = context.typeof(trustedMarkerHandle) === "boolean";
     const message =
       context.typeof(messageHandle) === "string"
         ? context.getString(messageHandle)
         : normalizeThrownMessage(context.dump(handle));
 
-    if (isKnownErrorCode(code)) {
+    if (trustedHostError && isKnownErrorCode(code)) {
       return {
         code,
         message,
       };
     }
 
-    return toExecuteError(message, deadline);
+    return {
+      code: "runtime_error",
+      message,
+    };
   } finally {
     codeHandle.dispose();
     messageHandle.dispose();
+    trustedMarkerHandle.dispose();
   }
 }
 
@@ -167,6 +175,7 @@ async function waitForPromiseSettlement(
   runtime: QuickJSRuntime,
   promise: Promise<unknown>,
   deadline: number,
+  trustedHostErrorKey: string,
 ): Promise<void> {
   let settled = false;
   let rejection: unknown;
@@ -194,7 +203,7 @@ async function waitForPromiseSettlement(
         const executeError = errorFromGuestHandle(
           pendingError.context,
           pendingError,
-          deadline,
+          trustedHostErrorKey,
         );
         throw new ExecuteFailure(executeError.code, executeError.message);
       } finally {
@@ -234,6 +243,7 @@ function injectProviders(
   context: QuickJSContext,
   providers: ResolvedToolProvider[],
   signal: AbortSignal,
+  trustedHostErrorKey: string,
 ): void {
   for (const provider of providers) {
     const providerHandle = context.newObject();
@@ -246,6 +256,7 @@ function injectProviders(
           descriptor,
           safeToolName,
           signal,
+          trustedHostErrorKey,
         );
         context.setProp(providerHandle, safeToolName, toolHandle);
         toolHandle.dispose();
@@ -264,6 +275,7 @@ function createToolHandle(
   descriptor: ResolvedToolDescriptor,
   safeToolName: string,
   signal: AbortSignal,
+  trustedHostErrorKey: string,
 ): QuickJSHandle {
   return context.newFunction(safeToolName, (...args) => {
     const deferred = context.newPromise();
@@ -311,6 +323,7 @@ function createToolHandle(
             context,
             executeError.code,
             executeError.message,
+            trustedHostErrorKey,
           );
           deferred.reject(errorHandle);
           errorHandle.dispose();
@@ -331,6 +344,7 @@ function createToolHandle(
           context,
           executeError.code,
           executeError.message,
+          trustedHostErrorKey,
         );
         deferred.reject(errorHandle);
         errorHandle.dispose();
@@ -376,6 +390,7 @@ export class QuickJsExecutor implements Executor {
     const deadline = startedAt + this.timeoutMs;
     const logs: string[] = [];
     const abortController = new AbortController();
+    const trustedHostErrorKey = `__mcploomHostError_${randomUUID()}`;
     const module = await this.loadModule();
     const runtime = module.newRuntime();
     runtime.setMemoryLimit(this.memoryLimitBytes);
@@ -384,7 +399,12 @@ export class QuickJsExecutor implements Executor {
 
     try {
       injectConsole(context, logs);
-      injectProviders(context, providers, abortController.signal);
+      injectProviders(
+        context,
+        providers,
+        abortController.signal,
+        trustedHostErrorKey,
+      );
 
       const executableSource = normalizeCode(code);
       const functionHandle = context.unwrapResult(
@@ -398,7 +418,12 @@ export class QuickJsExecutor implements Executor {
 
         try {
           const promiseResult = context.resolvePromise(promiseHandle);
-          await waitForPromiseSettlement(runtime, promiseResult, deadline);
+          await waitForPromiseSettlement(
+            runtime,
+            promiseResult,
+            deadline,
+            trustedHostErrorKey,
+          );
           const settledResult = await promiseResult;
 
           if (isFail(settledResult)) {
@@ -407,7 +432,11 @@ export class QuickJsExecutor implements Executor {
             try {
               return {
                 durationMs: Date.now() - startedAt,
-                error: errorFromGuestHandle(context, errorHandle, deadline),
+                error: errorFromGuestHandle(
+                  context,
+                  errorHandle,
+                  trustedHostErrorKey,
+                ),
                 logs: truncateLogs(logs, this.maxLogLines, this.maxLogChars),
                 ok: false,
               };
