@@ -122,6 +122,26 @@ describe("resolveProvider", () => {
     });
   });
 
+  it("rejects non-serializable tool outputs before they cross the executor boundary", async () => {
+    const provider = resolveProvider({
+      name: "mcp",
+      tools: {
+        "my-tool": {
+          execute: async () => ({ fn: () => "nope" }),
+        },
+      },
+    });
+
+    await expect(
+      provider.tools.my_tool.execute(
+        {},
+        createContext("mcp", "my_tool", "my-tool"),
+      ),
+    ).rejects.toMatchObject({
+      code: "serialization_error",
+    });
+  });
+
   it("accepts a full Zod schema for input validation", async () => {
     const provider = resolveProvider({
       name: "mcp",

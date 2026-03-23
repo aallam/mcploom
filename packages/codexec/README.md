@@ -1,6 +1,6 @@
 # @mcploom/codexec
 
-Executor-agnostic core for sandboxed JavaScript that can call host tools directly or wrap MCP servers and clients into callable namespaces.
+Executor-agnostic core for guest JavaScript that can call host tools directly or wrap MCP servers and clients into callable namespaces.
 
 [![npm version](https://img.shields.io/npm/v/%40mcploom%2Fcodexec?style=flat-square)](https://www.npmjs.com/package/@mcploom/codexec)
 [![License](https://img.shields.io/github/license/aallam/mcploom?style=flat-square)](https://github.com/aallam/mcploom/blob/main/LICENSE)
@@ -9,7 +9,7 @@ Executor-agnostic core for sandboxed JavaScript that can call host tools directl
 
 ## What You Get
 
-- Resolve host tools into safe sandbox namespaces with deterministic name sanitization.
+- Resolve host tools into deterministic guest namespaces with name sanitization.
 - Validate tool inputs and outputs with JSON Schema, full Zod schemas, or MCP SDK-style raw Zod shapes.
 - Normalize user code before execution and generate namespace typings from resolved schemas.
 - Wrap MCP servers or clients into codexec providers, or expose code-execution tools from an MCP server.
@@ -30,6 +30,7 @@ Executor-agnostic core for sandboxed JavaScript that can call host tools directl
 - [Expose MCP code-execution tools from a server](https://github.com/aallam/mcploom/blob/main/examples/codexec-mcp-server.ts)
 - [Run the same flow on `isolated-vm`](https://github.com/aallam/mcploom/blob/main/examples/codexec-isolated-vm-basic.ts)
 - [Full examples index](https://github.com/aallam/mcploom/tree/main/examples)
+- [Threat model and release guidance](https://github.com/aallam/mcploom/tree/main/docs/security)
 
 ## Install
 
@@ -38,6 +39,16 @@ npm install @mcploom/codexec @mcploom/codexec-quickjs
 ```
 
 Swap in `@mcploom/codexec-isolated-vm` when you want the native executor instead.
+
+## Security Posture
+
+- Codexec gives you fresh execution state, JSON-only tool boundaries, schema validation, timeout handling, memory limits, and bounded logs.
+- Codexec does not give you a hard security boundary for hostile code. It runs guest code in-process.
+- Providers are explicit capability grants. Every tool you expose is authority you are handing to guest code.
+- In the default deployment model, provider and MCP tool definitions are controlled by the application, not by the end user.
+- Third-party MCP integrations should be reviewed as dependency-trust decisions, not folded into the primary end-user attacker model.
+- If the code source is hostile, run codexec behind stronger isolation such as a separate process, container, or VM.
+- Threat model: [`docs/security/codexec-threat-model.md`](https://github.com/aallam/mcploom/blob/main/docs/security/codexec-threat-model.md)
 
 ## Exports
 
@@ -81,4 +92,4 @@ const result = await executor.execute("await tools.add({ x: 2, y: 5 })", [
 
 ## MCP Adapters
 
-Use `@mcploom/codexec/mcp` when you want to wrap an MCP server or client into a tool provider, or expose code-execution tools from an MCP server. Wrapped tools preserve raw MCP `CallToolResult` envelopes so sandboxed code can inspect `structuredContent` first and fall back to `content`.
+Use `@mcploom/codexec/mcp` when you want to wrap an MCP server or client into a tool provider, or expose code-execution tools from an MCP server. Wrapped tools preserve raw MCP `CallToolResult` envelopes so guest code can inspect `structuredContent` first and fall back to `content`.
