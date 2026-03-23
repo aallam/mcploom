@@ -286,7 +286,13 @@ function createToolHandle(
     signal.addEventListener("abort", onAbort, { once: true });
 
     void Promise.resolve()
-      .then(async () => descriptor.execute(input, executionContext))
+      .then(async () => {
+        if (signal.aborted) {
+          throw new ExecuteFailure("timeout", "Execution timed out");
+        }
+
+        return descriptor.execute(input, executionContext);
+      })
       .then((result) => {
         signal.removeEventListener("abort", onAbort);
         if (!context.alive || !deferred.alive) {

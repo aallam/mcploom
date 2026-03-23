@@ -1,6 +1,6 @@
 {
   "name": "@mcploom/codexec-quickjs",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "QuickJS executor for the mcploom codexec core package.",
   "license": "MIT",
   "type": "module",
@@ -41,7 +41,7 @@
   "homepage": "https://github.com/aallam/mcploom/tree/main/packages/codexec-quickjs#readme",
   "bugs": "https://github.com/aallam/mcploom/issues",
   "dependencies": {
-    "@mcploom/codexec": "^0.2.0",
+    "@mcploom/codexec": "^0.2.1",
     "quickjs-emscripten": "^0.31.0"
   }
 }
