@@ -122,16 +122,20 @@ export async function createMcpToolProvider(
   for (const tool of toolsResponse.tools) {
     provider.tools[tool.name] = {
       description: tool.description,
-      execute: async (input) => {
+      execute: async (input, context) => {
         const argumentsObject =
           typeof input === "object" && input !== null
             ? (input as Record<string, unknown>)
             : undefined;
 
-        return client.callTool({
-          arguments: argumentsObject,
-          name: tool.name,
-        });
+        return client.callTool(
+          {
+            arguments: argumentsObject,
+            name: tool.name,
+          },
+          undefined,
+          { signal: context.signal },
+        );
       },
       inputSchema: tool.inputSchema,
     };
