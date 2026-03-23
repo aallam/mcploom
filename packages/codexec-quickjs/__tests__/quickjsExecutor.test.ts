@@ -153,14 +153,16 @@ describe("QuickJsExecutor", () => {
   });
 
   it("aborts in-flight provider work when execution times out", async () => {
-    const executor = new QuickJsExecutor({ timeoutMs: 10 });
+    const executor = new QuickJsExecutor({ timeoutMs: 50 });
     let aborted = false;
+    let started = false;
     const provider = resolveProvider({
       name: "mcp",
       tools: {
         hang: {
           execute: async (_input, context) =>
             await new Promise((_resolve, reject) => {
+              started = true;
               context.signal.addEventListener(
                 "abort",
                 () => {
@@ -184,6 +186,7 @@ describe("QuickJsExecutor", () => {
     expect(result.error).toMatchObject({
       code: "timeout",
     });
+    expect(started).toBe(true);
     expect(aborted).toBe(true);
   });
 
