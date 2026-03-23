@@ -1,4 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { Implementation } from "@modelcontextprotocol/sdk/types.js";
 import * as z from "zod";
 
 import type { Executor } from "../executor/executor";
@@ -6,6 +7,7 @@ import type { ResolvedToolProvider } from "../types";
 import {
   createMcpToolProvider,
   type CreateMcpToolProviderOptions,
+  getMcpToolSourceServerInfo,
   type McpToolSource,
 } from "./createMcpToolProvider";
 
@@ -15,6 +17,8 @@ import {
 export interface CodeMcpServerOptions extends CreateMcpToolProviderOptions {
   /** Executor used to run guest JavaScript against the wrapped provider. */
   executor: Executor;
+  /** Implementation metadata exposed to downstream clients as the wrapper server identity. */
+  serverInfo?: Implementation;
   /** Maximum number of text characters returned in text content blocks. */
   maxTextChars?: number;
   /** Wrapper tool layout to expose on the returned server. */
@@ -28,6 +32,10 @@ export interface CodeMcpServerOptions extends CreateMcpToolProviderOptions {
 }
 
 const DEFAULT_MAX_TEXT_CHARS = 24_000;
+const DEFAULT_MCP_CODE_WRAPPER_SERVER_INFO = {
+  name: "mcp-code-wrapper",
+  version: "0.0.0",
+} satisfies Implementation;
 
 function truncateText(text: string, maxTextChars: number): string {
   return text.length <= maxTextChars ? text : text.slice(0, maxTextChars);
@@ -127,12 +135,14 @@ export async function codeMcpServer(
     single: options.names?.single ?? "mcp_code",
   };
   const provider = await createMcpToolProvider(source, {
+    clientInfo: options.clientInfo,
     namespace: options.namespace ?? "mcp",
   });
-  const server = new McpServer({
-    name: "@mcploom/codexec",
-    version: "0.1.0",
-  });
+  const server = new McpServer(
+    options.serverInfo ??
+      getMcpToolSourceServerInfo(source) ??
+      DEFAULT_MCP_CODE_WRAPPER_SERVER_INFO,
+  );
 
   if (mode === "both" || mode === "split") {
     const registerTool = server.registerTool.bind(server) as (

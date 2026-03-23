@@ -169,6 +169,94 @@ describe("MCP adapters", () => {
     });
   });
 
+  it("reports upstream server identity to downstream clients by default", async () => {
+    const upstreamServer = createUpstreamServer();
+    const upstreamClient = await connectClient(upstreamServer);
+    const wrappedServer = await codeMcpServer(
+      { client: upstreamClient },
+      {
+        executor: new QuickJsExecutor(),
+        mode: "single",
+      },
+    );
+    const wrappedClient = await connectClient(wrappedServer);
+
+    expect(wrappedClient.getServerVersion()).toMatchObject({
+      name: "upstream",
+      version: "1.0.0",
+    });
+  });
+
+  it("allows overriding the wrapper server identity", async () => {
+    const upstreamServer = createUpstreamServer();
+    const upstreamClient = await connectClient(upstreamServer);
+    const wrappedServer = await codeMcpServer(
+      { client: upstreamClient },
+      {
+        executor: new QuickJsExecutor(),
+        mode: "single",
+        serverInfo: {
+          name: "custom-wrapper",
+          version: "2.0.0",
+        },
+      },
+    );
+    const wrappedClient = await connectClient(wrappedServer);
+
+    expect(wrappedClient.getServerVersion()).toMatchObject({
+      name: "custom-wrapper",
+      version: "2.0.0",
+    });
+  });
+
+  it("allows overriding the internal client identity for local server sources", async () => {
+    const upstreamServer = createUpstreamServer();
+
+    await createMcpToolProvider(
+      { server: upstreamServer },
+      {
+        namespace: "mcp",
+        clientInfo: {
+          name: "custom-provider-client",
+          version: "3.1.4",
+        },
+      },
+    );
+
+    expect(upstreamServer.server.getClientVersion()).toMatchObject({
+      name: "custom-provider-client",
+      version: "3.1.4",
+    });
+  });
+
+  it("uses a neutral wrapper identity when upstream server info is unavailable", async () => {
+    const upstreamServer = createUpstreamServer();
+    const wrappedServer = await codeMcpServer(
+      { server: upstreamServer },
+      {
+        executor: new QuickJsExecutor(),
+        mode: "single",
+      },
+    );
+    const wrappedClient = await connectClient(wrappedServer);
+
+    expect(wrappedClient.getServerVersion()).toMatchObject({
+      name: "mcp-code-wrapper",
+      version: "0.0.0",
+    });
+  });
+
+  it("uses a neutral internal client identity when not configured", async () => {
+    const upstreamServer = createUpstreamServer();
+
+    await createMcpToolProvider({ server: upstreamServer }, { namespace: "mcp" });
+
+    expect(upstreamServer.server.getClientVersion()).toMatchObject({
+      name: "mcp-tool-client",
+      version: "0.0.0",
+    });
+  });
+
   it("supports single-tool mode and marks execution failures as MCP tool errors", async () => {
     const upstreamServer = createUpstreamServer();
     const upstreamClient = await connectClient(upstreamServer);

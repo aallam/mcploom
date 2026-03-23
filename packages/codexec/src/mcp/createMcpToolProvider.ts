@@ -1,15 +1,40 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { Implementation } from "@modelcontextprotocol/sdk/types.js";
 
 import { resolveProvider } from "../provider/resolveProvider";
 import type { ResolvedToolProvider, ToolProvider } from "../types";
-import { schemaToType } from "../typegen/jsonSchema";
+import {indent, schemaToType} from "../typegen/jsonSchema";
 
 /**
  * Source used to discover MCP tools for wrapping.
  */
-export type McpToolSource = { client: Client } | { server: McpServer };
+export type McpToolSource =
+  | { client: Client; serverInfo?: Implementation }
+  | { server: McpServer; serverInfo?: Implementation };
+
+const DEFAULT_MCP_TOOL_CLIENT_INFO = {
+  name: "mcp-tool-client",
+  version: "0.0.0",
+} satisfies Implementation;
+
+/**
+ * Returns the upstream server identity when the source can provide one.
+ */
+export function getMcpToolSourceServerInfo(
+  source: McpToolSource,
+): Implementation | undefined {
+  if (source.serverInfo) {
+    return source.serverInfo;
+  }
+
+  if ("client" in source) {
+    return source.client.getServerVersion();
+  }
+
+  return undefined;
+}
 
 /**
  * Options for wrapping MCP tools into a code-execution provider.
@@ -17,13 +42,8 @@ export type McpToolSource = { client: Client } | { server: McpServer };
 export interface CreateMcpToolProviderOptions {
   /** Namespace exposed to guest code for the wrapped tools. */
   namespace?: string;
-}
-
-function indent(value: string, level = 1): string {
-  return value
-    .split("\n")
-    .map((line) => `${"  ".repeat(level)}${line}`)
-    .join("\n");
+  /** Implementation metadata exposed to local `{ server }` sources as the client identity. */
+  clientInfo?: Implementation;
 }
 
 function generateMcpWrappedToolTypes(provider: ResolvedToolProvider): string {
@@ -82,7 +102,10 @@ function generateMcpWrappedToolTypes(provider: ResolvedToolProvider): string {
   )}\n}`;
 }
 
-async function getClient(source: McpToolSource): Promise<Client> {
+async function getClient(
+  source: McpToolSource,
+  clientInfo: Implementation,
+): Promise<Client> {
   if ("client" in source) {
     return source.client;
   }
@@ -93,10 +116,7 @@ async function getClient(source: McpToolSource): Promise<Client> {
 
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
-  const client = new Client({
-    name: "@mcploom/codexec",
-    version: "0.1.0",
-  });
+  const client = new Client(clientInfo);
 
   await Promise.all([
     source.server.connect(serverTransport),
@@ -112,7 +132,10 @@ export async function createMcpToolProvider(
   source: McpToolSource,
   options: CreateMcpToolProviderOptions = {},
 ): Promise<ResolvedToolProvider> {
-  const client = await getClient(source);
+  const client = await getClient(
+    source,
+    options.clientInfo ?? DEFAULT_MCP_TOOL_CLIENT_INFO,
+  );
   const toolsResponse = await client.listTools();
   const provider: ToolProvider = {
     name: options.namespace ?? "mcp",
