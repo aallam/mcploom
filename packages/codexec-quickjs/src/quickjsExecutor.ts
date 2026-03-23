@@ -268,6 +268,14 @@ function createToolHandle(
   return context.newFunction(safeToolName, (...args) => {
     const deferred = context.newPromise();
     const input = args[0] === undefined ? undefined : context.dump(args[0]);
+    const disposeDeferred = () => {
+      if (deferred.alive) {
+        deferred.dispose();
+      }
+    };
+    const onAbort = () => {
+      disposeDeferred();
+    };
     const executionContext = createExecutionContext(
       signal,
       provider.name,
@@ -275,10 +283,14 @@ function createToolHandle(
       descriptor.originalName,
     );
 
+    signal.addEventListener("abort", onAbort, { once: true });
+
     void Promise.resolve()
       .then(async () => descriptor.execute(input, executionContext))
       .then((result) => {
+        signal.removeEventListener("abort", onAbort);
         if (!context.alive || !deferred.alive) {
+          disposeDeferred();
           return;
         }
 
@@ -298,11 +310,13 @@ function createToolHandle(
           errorHandle.dispose();
         } finally {
           resultHandle?.dispose();
-          deferred.dispose();
+          disposeDeferred();
         }
       })
       .catch((error) => {
+        signal.removeEventListener("abort", onAbort);
         if (!context.alive || !deferred.alive) {
+          disposeDeferred();
           return;
         }
 
@@ -314,7 +328,7 @@ function createToolHandle(
         );
         deferred.reject(errorHandle);
         errorHandle.dispose();
-        deferred.dispose();
+        disposeDeferred();
       });
 
     return deferred.handle;
