@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
 const repoRoot = path.dirname(fileURLToPath(import.meta.url));
+const includeIsolatedVm = process.env.VITEST_INCLUDE_ISOLATED_VM === "1";
 
 export default defineConfig({
   resolve: {
@@ -28,6 +29,13 @@ export default defineConfig({
         ),
       },
       {
+        find: "@mcploom/codexec-isolated-vm",
+        replacement: path.join(
+          repoRoot,
+          "packages/codexec-isolated-vm/src/index.ts",
+        ),
+      },
+      {
         find: "@mcploom/codexec",
         replacement: path.join(repoRoot, "packages/codexec/src/index.ts"),
       },
@@ -37,6 +45,8 @@ export default defineConfig({
     environment: "node",
     globals: true,
     include: ["packages/*/__tests__/**/*.test.ts"],
-    exclude: ["packages/codexec-isolated-vm/__tests__/**/*.test.ts"],
+    exclude: includeIsolatedVm
+      ? []
+      : ["packages/codexec-isolated-vm/__tests__/**/*.test.ts"],
   },
 });
