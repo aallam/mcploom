@@ -15,10 +15,16 @@ export class MemoryCacheStore implements CacheStore {
   private readonly store = new Map<string, CacheEntry>();
   private readonly maxSize: number;
 
+  /**
+   * Creates an in-memory cache store with an optional maximum entry count.
+   */
   constructor(opts?: { maxSize?: number }) {
     this.maxSize = opts?.maxSize ?? 1000;
   }
 
+  /**
+   * Returns the cached result for a key, or `undefined` when the entry is missing or expired.
+   */
   async get(key: string): Promise<MiddlewareResult | undefined> {
     const entry = this.store.get(key);
     if (!entry) return undefined;
@@ -29,6 +35,9 @@ export class MemoryCacheStore implements CacheStore {
     return entry.result;
   }
 
+  /**
+   * Stores a middleware result for the provided TTL, expressed in seconds.
+   */
   async set(key: string, value: MiddlewareResult, ttl: number): Promise<void> {
     if (this.store.size >= this.maxSize && !this.store.has(key)) {
       const oldest = this.store.keys().next().value;
@@ -40,6 +49,9 @@ export class MemoryCacheStore implements CacheStore {
     });
   }
 
+  /**
+   * Removes a cached entry immediately.
+   */
   async delete(key: string): Promise<void> {
     this.store.delete(key);
   }

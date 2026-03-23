@@ -44,6 +44,9 @@ export class McpAnalytics {
   private readonly tracing: boolean;
   private readonly samplingStrategy: SamplingStrategy;
 
+  /**
+   * Creates an analytics instance with the configured exporter, buffering, and sampling behavior.
+   */
   constructor(config: AnalyticsConfig) {
     this.sampleRate = config.sampleRate ?? 1;
     this.metadata = config.metadata;

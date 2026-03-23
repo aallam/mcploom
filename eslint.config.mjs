@@ -1,24 +1,10 @@
+import eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
 import js from "@eslint/js";
 import eslintConfigPrettier from "eslint-config-prettier";
 import jsdoc from "eslint-plugin-jsdoc";
+import security from "eslint-plugin-security";
 import globals from "globals";
 import tseslint from "typescript-eslint";
-
-const publicApiFiles = [
-  "packages/codexec/src/errors.ts",
-  "packages/codexec/src/normalize.ts",
-  "packages/codexec/src/sanitize.ts",
-  "packages/codexec/src/types.ts",
-  "packages/codexec/src/executor/executor.ts",
-  "packages/codexec/src/provider/resolveProvider.ts",
-  "packages/codexec/src/typegen/jsonSchema.ts",
-  "packages/codexec/src/mcp/createMcpToolProvider.ts",
-  "packages/codexec/src/mcp/codeMcpServer.ts",
-  "packages/codexec-quickjs/src/types.ts",
-  "packages/codexec-quickjs/src/quickjsExecutor.ts",
-  "packages/codexec-isolated-vm/src/types.ts",
-  "packages/codexec-isolated-vm/src/isolatedVmExecutor.ts",
-];
 
 export default tseslint.config(
   {
@@ -34,12 +20,21 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     files: ["**/*.ts"],
+    plugins: {
+      "@eslint-community/eslint-comments": eslintComments,
+      security,
+    },
     languageOptions: {
       ecmaVersion: "latest",
       globals: globals.node,
       sourceType: "module",
     },
     rules: {
+      "@eslint-community/eslint-comments/disable-enable-pair": "error",
+      "@eslint-community/eslint-comments/no-aggregating-enable": "error",
+      "@eslint-community/eslint-comments/no-duplicate-disable": "error",
+      "@eslint-community/eslint-comments/no-unlimited-disable": "error",
+      "@eslint-community/eslint-comments/no-unused-enable": "error",
       "@typescript-eslint/consistent-type-imports": [
         "error",
         {
@@ -55,10 +50,14 @@ export default tseslint.config(
           varsIgnorePattern: "^_",
         },
       ],
+      "security/detect-bidi-characters": "error",
+      "security/detect-child-process": "error",
+      "security/detect-eval-with-expression": "error",
+      "security/detect-non-literal-require": "error",
     },
   },
   {
-    files: publicApiFiles,
+    files: ["packages/*/src/**/*.ts"],
     plugins: {
       jsdoc,
     },
@@ -77,7 +76,8 @@ export default tseslint.config(
             "ExportNamedDeclaration > FunctionDeclaration",
             "ExportNamedDeclaration > TSInterfaceDeclaration",
             "ExportNamedDeclaration > TSTypeAliasDeclaration",
-            "ExportNamedDeclaration > ClassDeclaration > ClassBody > MethodDefinition[key.name='execute']",
+            "ExportNamedDeclaration > VariableDeclaration",
+            "ExportNamedDeclaration > ClassDeclaration > ClassBody > MethodDefinition:not([accessibility='private'])",
           ],
           publicOnly: false,
           require: {

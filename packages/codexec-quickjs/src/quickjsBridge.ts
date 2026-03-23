@@ -18,10 +18,16 @@ function formatLogValue(value: unknown): string {
   }
 }
 
+/**
+ * Formats guest console arguments into a single log line for host-side capture.
+ */
 export function formatConsoleLine(values: unknown[]): string {
   return values.map((value) => formatLogValue(value)).join(" ");
 }
 
+/**
+ * Creates a guest-visible error object that carries a trusted host error code marker.
+ */
 export function createGuestErrorHandle(
   context: QuickJSContext,
   code: ExecuteErrorCode,
@@ -42,6 +48,9 @@ export function createGuestErrorHandle(
   }
 }
 
+/**
+ * Converts a guest QuickJS handle into a JSON-compatible host value.
+ */
 export function fromGuestHandle(
   context: QuickJSContext,
   handle: QuickJSHandle,
@@ -96,6 +105,9 @@ export function fromGuestHandle(
   }
 }
 
+/**
+ * Converts a host JSON-compatible value into a guest QuickJS handle.
+ */
 export function toGuestHandle(
   context: QuickJSContext,
   value: unknown,

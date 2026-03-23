@@ -365,6 +365,9 @@ export class QuickJsExecutor implements Executor {
   private readonly memoryLimitBytes: number;
   private readonly timeoutMs: number;
 
+  /**
+   * Creates a QuickJS executor with one-shot runtime limits and host bridging configuration.
+   */
   constructor(options: QuickJsExecutorOptions = {}) {
     this.loadModule = async () => {
       const loaded = options.loadModule

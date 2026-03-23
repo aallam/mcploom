@@ -55,6 +55,9 @@ async function getOtelApi(): Promise<OtelApi | undefined> {
   }
 }
 
+/**
+ * Span handle and context pair returned when analytics tracing starts a tool span.
+ */
 export interface TracingSpan {
   span: OtelSpan;
   context: OtelContext;

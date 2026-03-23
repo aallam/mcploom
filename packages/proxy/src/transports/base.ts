@@ -18,14 +18,23 @@ export abstract class BaseBackendClient<TTransport> {
   protected transport: TTransport | undefined;
   private cachedTools: ToolInfo[] | undefined;
 
+  /**
+   * Creates a backend client base bound to a logical backend name.
+   */
   constructor(protected readonly name: string) {}
 
+  /**
+   * Attaches and connects an MCP client using the concrete transport instance.
+   */
   protected async connectWith(transport: ClientTransport): Promise<void> {
     this.transport = transport as TTransport;
     this.client = new Client({ name: `proxy-${this.name}`, version: "1.0.0" });
     await this.client.connect(transport);
   }
 
+  /**
+   * Lists and caches tools exposed by the connected backend.
+   */
   async listTools(): Promise<ToolInfo[]> {
     if (this.cachedTools) return this.cachedTools;
     if (!this.client)
@@ -41,6 +50,9 @@ export abstract class BaseBackendClient<TTransport> {
     return this.cachedTools;
   }
 
+  /**
+   * Calls a backend tool through the connected MCP client.
+   */
   async callTool(
     toolName: string,
     args: Record<string, unknown>,
@@ -60,10 +72,16 @@ export abstract class BaseBackendClient<TTransport> {
     };
   }
 
+  /**
+   * Clears any cached tool metadata so the next list refresh re-queries the backend.
+   */
   invalidateToolCache(): void {
     this.cachedTools = undefined;
   }
 
+  /**
+   * Closes the backend client connection and drops cached state.
+   */
   async close(): Promise<void> {
     await this.client?.close();
     this.client = undefined;
@@ -71,6 +89,9 @@ export abstract class BaseBackendClient<TTransport> {
     this.cachedTools = undefined;
   }
 
+  /**
+   * Returns whether the backend client currently has an active MCP connection.
+   */
   get connected(): boolean {
     return this.client !== undefined;
   }
