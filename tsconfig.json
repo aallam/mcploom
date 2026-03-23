@@ -22,8 +22,7 @@
     "packages/codexec/**/*.ts",
     "packages/codexec-quickjs/**/*.ts",
     "packages/codexec-isolated-vm/**/*.ts",
-    "vitest.config.ts",
-    "vitest.isolated-vm.config.ts"
+    "vitest.config.ts"
   ],
   "exclude": ["**/node_modules", "packages/*/dist"]
 }
