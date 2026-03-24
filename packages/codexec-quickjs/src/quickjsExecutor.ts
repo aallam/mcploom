@@ -14,20 +14,24 @@ import {
 
 import {
   ExecuteFailure,
+  createExecutionContext,
+  formatConsoleLine,
+  getExecutionTimeoutMessage,
   isExecuteFailure,
+  isKnownExecuteErrorCode,
   normalizeCode,
+  normalizeThrownMessage,
+  truncateLogs,
 } from "@mcploom/codexec";
 import type {
   ExecuteError,
   ExecuteResult,
   ResolvedToolDescriptor,
   ResolvedToolProvider,
-  ToolExecutionContext,
   Executor,
 } from "@mcploom/codexec";
 import {
   createGuestErrorHandle,
-  formatConsoleLine,
   fromGuestHandle,
   toGuestHandle,
 } from "./quickjsBridge";
@@ -42,26 +46,6 @@ const loadDefaultModule = memoizePromiseFactory(() =>
   newQuickJSWASMModule(RELEASE_SYNC),
 );
 
-function isKnownErrorCode(value: unknown): value is ExecuteError["code"] {
-  return (
-    value === "timeout" ||
-    value === "memory_limit" ||
-    value === "validation_error" ||
-    value === "tool_error" ||
-    value === "runtime_error" ||
-    value === "serialization_error" ||
-    value === "internal_error"
-  );
-}
-
-function normalizeThrownMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return String(error);
-}
-
 function toExecuteError(error: unknown, deadline: number): ExecuteError {
   if (isExecuteFailure(error)) {
     return {
@@ -75,7 +59,7 @@ function toExecuteError(error: unknown, deadline: number): ExecuteError {
   if (Date.now() > deadline || message.includes("interrupted")) {
     return {
       code: "timeout",
-      message: "Execution timed out",
+      message: getExecutionTimeoutMessage(),
     };
   }
 
@@ -99,7 +83,6 @@ function errorFromGuestHandle(
 ): ExecuteError {
   const codeHandle = context.getProp(handle, "code");
   const messageHandle = context.getProp(handle, "message");
-  const nameHandle = context.getProp(handle, "name");
   const trustedMarkerHandle = context.getProp(handle, trustedHostErrorKey);
 
   try {
@@ -107,26 +90,15 @@ function errorFromGuestHandle(
       context.typeof(codeHandle) === "string"
         ? context.getString(codeHandle)
         : undefined;
-    const name =
-      context.typeof(nameHandle) === "string"
-        ? context.getString(nameHandle)
-        : undefined;
     const trustedHostError = context.typeof(trustedMarkerHandle) === "boolean";
     const message =
       context.typeof(messageHandle) === "string"
         ? context.getString(messageHandle)
         : normalizeThrownMessage(context.dump(handle));
 
-    if (trustedHostError && isKnownErrorCode(code)) {
+    if (trustedHostError && isKnownExecuteErrorCode(code)) {
       return {
         code,
-        message,
-      };
-    }
-
-    if (name === "InternalError" && message.toLowerCase().includes("out of memory")) {
-      return {
-        code: "memory_limit",
         message,
       };
     }
@@ -138,50 +110,8 @@ function errorFromGuestHandle(
   } finally {
     codeHandle.dispose();
     messageHandle.dispose();
-    nameHandle.dispose();
     trustedMarkerHandle.dispose();
   }
-}
-
-function truncateLogs(
-  logs: string[],
-  maxLogLines: number,
-  maxLogChars: number,
-): string[] {
-  const limitedLines = logs.slice(0, maxLogLines);
-  let remainingChars = maxLogChars;
-  const truncated: string[] = [];
-
-  for (const line of limitedLines) {
-    if (remainingChars <= 0) {
-      break;
-    }
-
-    if (line.length <= remainingChars) {
-      truncated.push(line);
-      remainingChars -= line.length;
-      continue;
-    }
-
-    truncated.push(line.slice(0, remainingChars));
-    break;
-  }
-
-  return truncated;
-}
-
-function createExecutionContext(
-  signal: AbortSignal,
-  providerName: string,
-  safeToolName: string,
-  originalToolName: string,
-): ToolExecutionContext {
-  return {
-    originalToolName,
-    providerName,
-    safeToolName,
-    signal,
-  };
 }
 
 async function waitForPromiseSettlement(
@@ -205,7 +135,7 @@ async function waitForPromiseSettlement(
 
   while (!settled) {
     if (Date.now() > deadline) {
-      throw new ExecuteFailure("timeout", "Execution timed out");
+      throw new ExecuteFailure("timeout", getExecutionTimeoutMessage());
     }
 
     const pendingJobsResult = runtime.executePendingJobs(-1);
@@ -313,7 +243,7 @@ function createToolHandle(
     void Promise.resolve()
       .then(async () => {
         if (signal.aborted) {
-          throw new ExecuteFailure("timeout", "Execution timed out");
+          throw new ExecuteFailure("timeout", getExecutionTimeoutMessage());
         }
 
         return descriptor.execute(input, executionContext);

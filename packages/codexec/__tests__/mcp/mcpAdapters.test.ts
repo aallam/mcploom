@@ -4,7 +4,11 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { describe, expect, it } from "vitest";
 import * as z from "zod";
 
-import { codeMcpServer, createMcpToolProvider } from "@mcploom/codexec/mcp";
+import {
+  codeMcpServer,
+  createMcpToolProvider,
+  openMcpToolProvider,
+} from "@mcploom/codexec/mcp";
 import { QuickJsExecutor } from "@mcploom/codexec-quickjs";
 
 const searchDocsInputSchema: Record<string, z.ZodTypeAny> = {
@@ -229,6 +233,21 @@ describe("MCP adapters", () => {
     });
   });
 
+  it("exposes an explicit cleanup handle for local server sources", async () => {
+    const upstreamServer = createUpstreamServer();
+    const handle = await openMcpToolProvider(
+      { server: upstreamServer },
+      { namespace: "mcp" },
+    );
+
+    expect(handle.provider.name).toBe("mcp");
+    expect(upstreamServer.isConnected()).toBe(true);
+
+    await handle.close();
+
+    expect(upstreamServer.isConnected()).toBe(false);
+  });
+
   it("uses a neutral wrapper identity when upstream server info is unavailable", async () => {
     const upstreamServer = createUpstreamServer();
     const wrappedServer = await codeMcpServer(
@@ -244,6 +263,23 @@ describe("MCP adapters", () => {
       name: "mcp-code-wrapper",
       version: "0.0.0",
     });
+  });
+
+  it("closes owned local source connections when the wrapper server closes", async () => {
+    const upstreamServer = createUpstreamServer();
+    const wrappedServer = await codeMcpServer(
+      { server: upstreamServer },
+      {
+        executor: new QuickJsExecutor(),
+        mode: "single",
+      },
+    );
+
+    expect(upstreamServer.isConnected()).toBe(true);
+
+    await wrappedServer.close();
+
+    expect(upstreamServer.isConnected()).toBe(false);
   });
 
   it("uses a neutral internal client identity when not configured", async () => {

@@ -1,27 +1,16 @@
+import { isValidIdentifier, serializePropertyName } from "../identifier";
 import type { JsonSchema, TypegenToolDescriptor } from "../types";
+import {
+  indent,
+  renderDocComment,
+  renderNamespaceDeclaration,
+} from "./render";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function isIdentifier(value: string): boolean {
-  return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(value);
-}
-
-
-/**
- * Indents each line of the given string by a specified number of levels (default is 1).
- */
-export function indent(value: string, level = 1): string {
-  return value
-    .split("\n")
-    .map((line) => `${"  ".repeat(level)}${line}`)
-    .join("\n");
-}
-
-function serializePropertyName(name: string): string {
-  return isIdentifier(name) ? name : JSON.stringify(name);
-}
+export { indent } from "./render";
 
 /**
  * Converts a supported JSON Schema fragment into a TypeScript type expression.
@@ -60,7 +49,7 @@ export function schemaToType(
         level + 1,
       );
 
-      if (/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(itemType)) {
+      if (isValidIdentifier(itemType)) {
         return `${itemType}[]`;
       }
 
@@ -102,11 +91,9 @@ function formatToolDeclaration(
   tool: TypegenToolDescriptor,
 ): string {
   const lines: string[] = [];
-
-  if (tool.description) {
-    lines.push("/**");
-    lines.push(` * ${tool.description}`);
-    lines.push(" */");
+  const comment = tool.description ? renderDocComment([tool.description]) : "";
+  if (comment) {
+    lines.push(comment);
   }
 
   const inputType = schemaToType(tool.inputSchema);
@@ -123,13 +110,10 @@ export function generateTypesFromJsonSchema(
   providerName: string,
   tools: Record<string, TypegenToolDescriptor>,
 ): string {
-  const declarations = Object.entries(tools).map(([name, tool]) =>
+  return renderNamespaceDeclaration(
+    providerName,
+    Object.entries(tools).map(([name, tool]) =>
     formatToolDeclaration(name, tool),
+    ),
   );
-
-  if (declarations.length === 0) {
-    return `declare namespace ${providerName} {}`;
-  }
-
-  return `declare namespace ${providerName} {\n${indent(declarations.join("\n\n"))}\n}`;
 }

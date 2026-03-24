@@ -2,29 +2,6 @@ import type { QuickJSContext, QuickJSHandle } from "quickjs-emscripten";
 
 import { ExecuteFailure, type ExecuteErrorCode } from "@mcploom/codexec";
 
-function formatLogValue(value: unknown): string {
-  if (typeof value === "string") {
-    return value;
-  }
-
-  if (value === undefined) {
-    return "undefined";
-  }
-
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return String(value);
-  }
-}
-
-/**
- * Formats guest console arguments into a single log line for host-side capture.
- */
-export function formatConsoleLine(values: unknown[]): string {
-  return values.map((value) => formatLogValue(value)).join(" ");
-}
-
 /**
  * Creates a guest-visible error object that carries a trusted host error code marker.
  */

@@ -5,7 +5,7 @@ import type { Implementation } from "@modelcontextprotocol/sdk/types.js";
 
 import { resolveProvider } from "../provider/resolveProvider";
 import type { ResolvedToolProvider, ToolProvider } from "../types";
-import {indent, schemaToType} from "../typegen/jsonSchema";
+import { generateMcpWrappedToolTypes } from "./mcpWrappedToolTypes";
 
 /**
  * Source used to discover MCP tools for wrapping.
@@ -46,68 +46,43 @@ export interface CreateMcpToolProviderOptions {
   clientInfo?: Implementation;
 }
 
-function generateMcpWrappedToolTypes(provider: ResolvedToolProvider): string {
-  const toolDeclarations = Object.entries(provider.tools).map(
-    ([safeName, tool]) => {
-      const lines: string[] = [];
-
-      if (tool.description) {
-        lines.push("/**");
-        lines.push(` * ${tool.description}`);
-        lines.push(" *");
-        lines.push(
-          " * Wrapped MCP tool. Inspect structuredContent first, then fall back to content text items.",
-        );
-        lines.push(" */");
-      } else {
-        lines.push("/**");
-        lines.push(
-          " * Wrapped MCP tool. Inspect structuredContent first, then fall back to content text items.",
-        );
-        lines.push(" */");
-      }
-
-      lines.push(
-        `function ${safeName}(input: ${schemaToType(tool.inputSchema)}): Promise<McpCallToolResult>;`,
-      );
-
-      return lines.join("\n");
-    },
-  );
-
-  const sharedTypes = [
-    "type McpCallToolResult = {",
-    "  content: Array<{",
-    "    type: string;",
-    "    text?: string;",
-    "    data?: string;",
-    "    mimeType?: string;",
-    "    resource?: unknown;",
-    "    uri?: string;",
-    "    name?: string;",
-    "    description?: string;",
-    "  }>;",
-    "  structuredContent?: unknown;",
-    "  isError?: boolean;",
-    "  _meta?: Record<string, unknown>;",
-    "};",
-  ].join("\n");
-
-  if (toolDeclarations.length === 0) {
-    return `declare namespace ${provider.name} {\n${indent(sharedTypes)}\n}`;
-  }
-
-  return `declare namespace ${provider.name} {\n${indent(
-    `${sharedTypes}\n\n${toolDeclarations.join("\n\n")}`,
-  )}\n}`;
+/**
+ * Explicit handle for a wrapped MCP provider and any owned source connections.
+ */
+export interface McpToolProviderHandle {
+  /** Resolved provider exposed to the executor or wrapper server. */
+  provider: ResolvedToolProvider;
+  /** Best-effort upstream server identity when available. */
+  serverInfo?: Implementation;
+  /** Releases any internal MCP client/server connection opened for the provider. */
+  close: () => Promise<void>;
 }
 
-async function getClient(
+interface OpenMcpToolClientResult {
+  client: Client;
+  close: () => Promise<void>;
+}
+
+async function closeAll(closers: Array<() => Promise<void>>): Promise<void> {
+  const results = await Promise.allSettled(closers.map((close) => close()));
+  const rejected = results.find(
+    (result): result is PromiseRejectedResult => result.status === "rejected",
+  );
+
+  if (rejected) {
+    throw rejected.reason;
+  }
+}
+
+async function openMcpToolClient(
   source: McpToolSource,
   clientInfo: Implementation,
-): Promise<Client> {
+): Promise<OpenMcpToolClientResult> {
   if ("client" in source) {
-    return source.client;
+    return {
+      client: source.client,
+      close: async () => {},
+    };
   }
 
   if (source.server.isConnected()) {
@@ -117,12 +92,80 @@ async function getClient(
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
   const client = new Client(clientInfo);
+  let closePromise: Promise<void> | undefined;
 
   await Promise.all([
     source.server.connect(serverTransport),
     client.connect(clientTransport),
   ]);
-  return client;
+
+  return {
+    client,
+    close: async () => {
+      closePromise ??= closeAll([
+        () => client.close(),
+        () => source.server.close(),
+      ]);
+      return closePromise;
+    },
+  };
+}
+
+/**
+ * Opens an MCP tool source as a resolved execution provider with explicit cleanup.
+ */
+export async function openMcpToolProvider(
+  source: McpToolSource,
+  options: CreateMcpToolProviderOptions = {},
+): Promise<McpToolProviderHandle> {
+  const connection = await openMcpToolClient(
+    source,
+    options.clientInfo ?? DEFAULT_MCP_TOOL_CLIENT_INFO,
+  );
+
+  try {
+    const toolsResponse = await connection.client.listTools();
+    const provider: ToolProvider = {
+      name: options.namespace ?? "mcp",
+      tools: {},
+    };
+
+    for (const tool of toolsResponse.tools) {
+      provider.tools[tool.name] = {
+        description: tool.description,
+        execute: async (input, context) => {
+          const argumentsObject =
+            typeof input === "object" && input !== null
+              ? (input as Record<string, unknown>)
+              : undefined;
+
+          return connection.client.callTool(
+            {
+              arguments: argumentsObject,
+              name: tool.name,
+            },
+            undefined,
+            { signal: context.signal },
+          );
+        },
+        inputSchema: tool.inputSchema,
+      };
+    }
+
+    const resolvedProvider = resolveProvider(provider);
+
+    return {
+      close: connection.close,
+      provider: {
+        ...resolvedProvider,
+        types: generateMcpWrappedToolTypes(resolvedProvider),
+      },
+      serverInfo: getMcpToolSourceServerInfo(source),
+    };
+  } catch (error) {
+    await connection.close().catch(() => {});
+    throw error;
+  }
 }
 
 /**
@@ -132,42 +175,6 @@ export async function createMcpToolProvider(
   source: McpToolSource,
   options: CreateMcpToolProviderOptions = {},
 ): Promise<ResolvedToolProvider> {
-  const client = await getClient(
-    source,
-    options.clientInfo ?? DEFAULT_MCP_TOOL_CLIENT_INFO,
-  );
-  const toolsResponse = await client.listTools();
-  const provider: ToolProvider = {
-    name: options.namespace ?? "mcp",
-    tools: {},
-  };
-
-  for (const tool of toolsResponse.tools) {
-    provider.tools[tool.name] = {
-      description: tool.description,
-      execute: async (input, context) => {
-        const argumentsObject =
-          typeof input === "object" && input !== null
-            ? (input as Record<string, unknown>)
-            : undefined;
-
-        return client.callTool(
-          {
-            arguments: argumentsObject,
-            name: tool.name,
-          },
-          undefined,
-          { signal: context.signal },
-        );
-      },
-      inputSchema: tool.inputSchema,
-    };
-  }
-
-  const resolvedProvider = resolveProvider(provider);
-
-  return {
-    ...resolvedProvider,
-    types: generateMcpWrappedToolTypes(resolvedProvider),
-  };
+  const handle = await openMcpToolProvider(source, options);
+  return handle.provider;
 }

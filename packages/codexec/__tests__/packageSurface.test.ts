@@ -15,5 +15,6 @@ describe("@mcploom/codexec package surface", () => {
 
     expect(mcp).toHaveProperty("createMcpToolProvider");
     expect(mcp).toHaveProperty("codeMcpServer");
+    expect(mcp).toHaveProperty("openMcpToolProvider");
   });
 });
