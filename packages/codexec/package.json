@@ -1,6 +1,6 @@
 {
   "name": "@mcploom/codexec",
-  "version": "0.2.2",
+  "version": "0.2.5",
   "description": "Executor-agnostic MCP code execution core and MCP adapters.",
   "license": "MIT",
   "type": "module",

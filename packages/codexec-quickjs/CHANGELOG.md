@@ -1,5 +1,29 @@
 # @mcploom/codexec-quickjs
 
+## 0.1.6
+
+### Patch Changes
+
+- Centralize executor helpers, tighten the penetration suite, and give MCP adapters an explicit `openMcpToolProvider` lifecycle plus better tooling exports so the new contract stays maintainable.
+- Updated dependencies
+  - @mcploom/codexec@0.2.5
+
+## 0.1.5
+
+### Patch Changes
+
+- Centralize executor helpers, tighten the penetration suite, and give MCP adapters an explicit `openMcpToolProvider` lifecycle plus better tooling exports so the new contract stays maintainable.
+- Updated dependencies
+  - @mcploom/codexec@0.2.4
+
+## 0.1.4
+
+### Patch Changes
+
+- Refactor the executor contract, shared helpers, and MCP lifecycle so both runtimes stay spoof-resistant and the wrapper owns cleanup, then push those helpers into codexec core with centralized identifier/typegen logic.
+- Updated dependencies
+  - @mcploom/codexec@0.2.3
+
 ## 0.1.3
 
 ### Patch Changes

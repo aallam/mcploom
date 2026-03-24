@@ -1,5 +1,23 @@
 # @mcploom/codexec
 
+## 0.2.5
+
+### Patch Changes
+
+- Centralize executor helpers, tighten the penetration suite, and give MCP adapters an explicit `openMcpToolProvider` lifecycle plus better tooling exports so the new contract stays maintainable.
+
+## 0.2.4
+
+### Patch Changes
+
+- Centralize executor helpers, tighten the penetration suite, and give MCP adapters an explicit `openMcpToolProvider` lifecycle plus better tooling exports so the new contract stays maintainable.
+
+## 0.2.3
+
+### Patch Changes
+
+- Refactor the executor contract, shared helpers, and MCP lifecycle so both runtimes stay spoof-resistant and the wrapper owns cleanup, then push those helpers into codexec core with centralized identifier/typegen logic.
+
 ## 0.2.2
 
 ### Patch Changes
