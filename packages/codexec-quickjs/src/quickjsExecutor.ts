@@ -99,12 +99,17 @@ function errorFromGuestHandle(
 ): ExecuteError {
   const codeHandle = context.getProp(handle, "code");
   const messageHandle = context.getProp(handle, "message");
+  const nameHandle = context.getProp(handle, "name");
   const trustedMarkerHandle = context.getProp(handle, trustedHostErrorKey);
 
   try {
     const code =
       context.typeof(codeHandle) === "string"
         ? context.getString(codeHandle)
+        : undefined;
+    const name =
+      context.typeof(nameHandle) === "string"
+        ? context.getString(nameHandle)
         : undefined;
     const trustedHostError = context.typeof(trustedMarkerHandle) === "boolean";
     const message =
@@ -119,6 +124,13 @@ function errorFromGuestHandle(
       };
     }
 
+    if (name === "InternalError" && message.toLowerCase().includes("out of memory")) {
+      return {
+        code: "memory_limit",
+        message,
+      };
+    }
+
     return {
       code: "runtime_error",
       message,
@@ -126,6 +138,7 @@ function errorFromGuestHandle(
   } finally {
     codeHandle.dispose();
     messageHandle.dispose();
+    nameHandle.dispose();
     trustedMarkerHandle.dispose();
   }
 }
