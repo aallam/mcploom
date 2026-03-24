@@ -138,6 +138,39 @@ describe("QuickJsExecutor", () => {
     });
   });
 
+  it("returns memory_limit when guest code exhausts runtime memory", async () => {
+    const executor = new QuickJsExecutor({
+      memoryLimitBytes: 8 * 1024 * 1024,
+      timeoutMs: 1000,
+    });
+    const result = await executor.execute(
+      'let value = "x"; while (true) value += value;',
+      [],
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("Expected memory_limit result");
+    }
+    expect(result.error).toMatchObject({
+      code: "memory_limit",
+    });
+  });
+
+  it("does not trust guest-thrown out-of-memory messages", async () => {
+    const executor = new QuickJsExecutor();
+    const result = await executor.execute('throw new Error("out of memory")', []);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("Expected runtime_error result");
+    }
+    expect(result.error).toMatchObject({
+      code: "runtime_error",
+      message: "out of memory",
+    });
+  });
+
   it("truncates captured logs to configured limits", async () => {
     const executor = new QuickJsExecutor({
       maxLogChars: 10,
