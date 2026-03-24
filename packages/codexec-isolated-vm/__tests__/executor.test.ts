@@ -137,6 +137,42 @@ describe("IsolatedVmExecutor", () => {
     });
   });
 
+  it("returns memory_limit when guest code exhausts runtime memory", async () => {
+    const executor = new IsolatedVmExecutor({
+      memoryLimitBytes: 8 * 1024 * 1024,
+      timeoutMs: 1000,
+    });
+    const result = await executor.execute(
+      'let s = "x"; while (true) s = s + s;',
+      [],
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("Expected memory_limit result");
+    }
+    expect(result.error).toMatchObject({
+      code: "memory_limit",
+    });
+  });
+
+  it("does not trust guest-thrown invalid-string-length messages", async () => {
+    const executor = new IsolatedVmExecutor();
+    const result = await executor.execute(
+      'throw new Error("Invalid string length")',
+      [],
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("Expected runtime_error result");
+    }
+    expect(result.error).toMatchObject({
+      code: "runtime_error",
+      message: "Invalid string length",
+    });
+  });
+
   it("truncates captured logs to configured limits", async () => {
     const executor = new IsolatedVmExecutor({
       maxLogChars: 10,

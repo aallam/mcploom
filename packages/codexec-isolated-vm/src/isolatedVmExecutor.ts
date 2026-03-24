@@ -65,6 +65,7 @@ type GuestExecutionEnvelope =
       error: {
         code?: string;
         message?: string;
+        name?: string;
       };
       ok: false;
     };
@@ -123,6 +124,31 @@ function normalizeThrownMessage(error: unknown): string {
   }
 
   return String(error);
+}
+
+function normalizeThrownName(error: unknown): string | undefined {
+  if (error instanceof Error) {
+    return error.name;
+  }
+
+  if (typeof error === "object" && error !== null && "name" in error) {
+    const name = (error as { name?: unknown }).name;
+    if (typeof name === "string") {
+      return name;
+    }
+  }
+
+  return undefined;
+}
+
+function isStringLengthMemoryError(
+  error: unknown,
+  message: string,
+): boolean {
+  return (
+    normalizeThrownName(error) === "RangeError" &&
+    message.toLowerCase() === "invalid string length"
+  );
 }
 
 function truncateLogs(
@@ -219,9 +245,19 @@ function toExecuteError(error: unknown, deadline: number): ExecuteError {
     isKnownErrorCode((error as { code?: unknown }).code) &&
     typeof (error as { message?: unknown }).message === "string"
   ) {
+    const code = (error as { code: ExecuteError["code"] }).code;
+    const message = (error as { message: string }).message;
+
+    if (code === "runtime_error" && isStringLengthMemoryError(error, message)) {
+      return {
+        code: "memory_limit",
+        message,
+      };
+    }
+
     return {
-      code: (error as { code: ExecuteError["code"] }).code,
-      message: (error as { message: string }).message,
+      code,
+      message,
     };
   }
 
@@ -247,6 +283,7 @@ function toExecuteError(error: unknown, deadline: number): ExecuteError {
   }
 
   if (
+    isStringLengthMemoryError(error, message) ||
     normalizedMessage.includes("memory limit") ||
     normalizedMessage.includes("out of memory")
   ) {
@@ -371,7 +408,11 @@ function createBootstrapSource(
     "    return trusted;",
     "  }",
     "  if (error && typeof error.message === 'string') {",
-    "    return { code: 'runtime_error', message: error.message };",
+    "    return {",
+    "      code: 'runtime_error',",
+    "      message: error.message,",
+    "      ...(typeof error.name === 'string' ? { name: error.name } : {}),",
+    "    };",
     "  }",
     "  return { code: 'runtime_error', message: String(error) };",
     "};",
