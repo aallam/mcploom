@@ -5,9 +5,8 @@ import * as z from "zod";
 import type { Executor } from "../executor/executor";
 import type { ResolvedToolProvider } from "../types";
 import {
-  createMcpToolProvider,
+  openMcpToolProvider,
   type CreateMcpToolProviderOptions,
-  getMcpToolSourceServerInfo,
   type McpToolSource,
 } from "./createMcpToolProvider";
 
@@ -120,6 +119,73 @@ function registerExecuteTool(
   );
 }
 
+function registerSearchTool(
+  server: McpServer,
+  name: string,
+  provider: ResolvedToolProvider,
+  maxTextChars: number,
+): void {
+  const registerTool = server.registerTool.bind(server) as (
+    toolName: string,
+    config: {
+      description: string;
+      inputSchema: Record<string, z.ZodTypeAny>;
+    },
+    handler: (args: { limit?: number; query?: string }) => Promise<{
+      content: Array<{ text: string; type: "text" }>;
+      structuredContent: Record<string, unknown>;
+    }>,
+  ) => void;
+
+  registerTool(
+    name,
+    {
+      description: `Search wrapped MCP tools exposed under the ${provider.name} namespace.`,
+      inputSchema: {
+        limit: z.number().int().optional(),
+        query: z.string().optional(),
+      },
+    },
+    async (args: { limit?: number; query?: string }) => {
+      const structuredContent = searchTools(provider, args.query, args.limit ?? 20);
+      return {
+        content: [
+          { text: renderText(structuredContent, maxTextChars), type: "text" },
+        ],
+        structuredContent,
+      };
+    },
+  );
+}
+
+function attachOwnedClose(
+  server: McpServer,
+  closeOwnedResources: () => Promise<void>,
+): McpServer {
+  const originalClose = server.close.bind(server);
+  let closePromise: Promise<void> | undefined;
+
+  server.close = async () => {
+    closePromise ??= (async () => {
+      const results = await Promise.allSettled([
+        originalClose(),
+        closeOwnedResources(),
+      ]);
+      const rejected = results.find(
+        (result): result is PromiseRejectedResult => result.status === "rejected",
+      );
+
+      if (rejected) {
+        throw rejected.reason;
+      }
+    })();
+
+    return closePromise;
+  };
+
+  return server;
+}
+
 /**
  * Creates an MCP server that exposes code-execution tools for a wrapped MCP source.
  */
@@ -134,73 +200,44 @@ export async function codeMcpServer(
     search: options.names?.search ?? "mcp_search_tools",
     single: options.names?.single ?? "mcp_code",
   };
-  const provider = await createMcpToolProvider(source, {
+  const handle = await openMcpToolProvider(source, {
     clientInfo: options.clientInfo,
     namespace: options.namespace ?? "mcp",
   });
+  const provider = handle.provider;
   const server = new McpServer(
     options.serverInfo ??
-      getMcpToolSourceServerInfo(source) ??
+      handle.serverInfo ??
       DEFAULT_MCP_CODE_WRAPPER_SERVER_INFO,
   );
 
-  if (mode === "both" || mode === "split") {
-    const registerTool = server.registerTool.bind(server) as (
-      toolName: string,
-      config: {
-        description: string;
-        inputSchema: Record<string, z.ZodTypeAny>;
-      },
-      handler: (args: { limit?: number; query?: string }) => Promise<{
-        content: Array<{ text: string; type: "text" }>;
-        structuredContent: Record<string, unknown>;
-      }>,
-    ) => void;
+  try {
+    if (mode === "both" || mode === "split") {
+      registerSearchTool(server, names.search, provider, maxTextChars);
+      registerExecuteTool(
+        server,
+        names.execute,
+        provider,
+        options.executor,
+        maxTextChars,
+        `Execute JavaScript against the wrapped ${provider.name} MCP tool namespace.`,
+      );
+    }
 
-    registerTool(
-      names.search,
-      {
-        description: `Search wrapped MCP tools exposed under the ${provider.name} namespace.`,
-        inputSchema: {
-          limit: z.number().int().optional(),
-          query: z.string().optional(),
-        },
-      },
-      async (args: { limit?: number; query?: string }) => {
-        const structuredContent = searchTools(
-          provider,
-          args.query,
-          args.limit ?? 20,
-        );
-        return {
-          content: [
-            { text: renderText(structuredContent, maxTextChars), type: "text" },
-          ],
-          structuredContent,
-        };
-      },
-    );
+    if (mode === "both" || mode === "single") {
+      registerExecuteTool(
+        server,
+        names.single,
+        provider,
+        options.executor,
+        maxTextChars,
+        `Execute JavaScript against the wrapped ${provider.name} MCP tool namespace.\n\n${provider.types}`,
+      );
+    }
 
-    registerExecuteTool(
-      server,
-      names.execute,
-      provider,
-      options.executor,
-      maxTextChars,
-      `Execute JavaScript against the wrapped ${provider.name} MCP tool namespace.`,
-    );
+    return attachOwnedClose(server, handle.close);
+  } catch (error) {
+    await handle.close().catch(() => {});
+    throw error;
   }
-
-  if (mode === "both" || mode === "single") {
-    registerExecuteTool(
-      server,
-      names.single,
-      provider,
-      options.executor,
-      maxTextChars,
-      `Execute JavaScript against the wrapped ${provider.name} MCP tool namespace.\n\n${provider.types}`,
-    );
-  }
-
-  return server;
 }

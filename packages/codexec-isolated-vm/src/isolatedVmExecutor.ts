@@ -2,15 +2,20 @@ import { randomUUID } from "node:crypto";
 
 import {
   ExecuteFailure,
+  createExecutionContext,
+  formatConsoleLine,
+  getExecutionTimeoutMessage,
   isExecuteFailure,
+  isKnownExecuteErrorCode,
   normalizeCode,
+  normalizeThrownMessage,
+  truncateLogs,
 } from "@mcploom/codexec";
 import type {
   ExecuteError,
   ExecuteResult,
   Executor,
   ResolvedToolProvider,
-  ToolExecutionContext,
 } from "@mcploom/codexec";
 
 import type { IsolatedVmExecutorOptions } from "./types";
@@ -76,20 +81,6 @@ const DEFAULT_MAX_LOG_LINES = 100;
 const DEFAULT_MAX_LOG_CHARS = 64_000;
 let cachedModulePromise: Promise<IsolatedVmModule> | undefined;
 
-function createExecutionContext(
-  signal: AbortSignal,
-  providerName: string,
-  safeToolName: string,
-  originalToolName: string,
-): ToolExecutionContext {
-  return {
-    originalToolName,
-    providerName,
-    safeToolName,
-    signal,
-  };
-}
-
 function hasRequiredNodeFlag(): boolean {
   const execArgv = process.execArgv.join(" ");
   const nodeOptions = process.env.NODE_OPTIONS ?? "";
@@ -99,104 +90,6 @@ function hasRequiredNodeFlag(): boolean {
   );
 }
 
-function isKnownErrorCode(value: unknown): value is ExecuteError["code"] {
-  return (
-    value === "timeout" ||
-    value === "memory_limit" ||
-    value === "validation_error" ||
-    value === "tool_error" ||
-    value === "runtime_error" ||
-    value === "serialization_error" ||
-    value === "internal_error"
-  );
-}
-
-function normalizeThrownMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  if (typeof error === "object" && error !== null && "message" in error) {
-    const message = (error as { message?: unknown }).message;
-    if (typeof message === "string") {
-      return message;
-    }
-  }
-
-  return String(error);
-}
-
-function normalizeThrownName(error: unknown): string | undefined {
-  if (error instanceof Error) {
-    return error.name;
-  }
-
-  if (typeof error === "object" && error !== null && "name" in error) {
-    const name = (error as { name?: unknown }).name;
-    if (typeof name === "string") {
-      return name;
-    }
-  }
-
-  return undefined;
-}
-
-function isStringLengthMemoryError(
-  error: unknown,
-  message: string,
-): boolean {
-  return (
-    normalizeThrownName(error) === "RangeError" &&
-    message.toLowerCase() === "invalid string length"
-  );
-}
-
-function truncateLogs(
-  logs: string[],
-  maxLogLines: number,
-  maxLogChars: number,
-): string[] {
-  const limitedLines = logs.slice(0, maxLogLines);
-  let remainingChars = maxLogChars;
-  const truncated: string[] = [];
-
-  for (const line of limitedLines) {
-    if (remainingChars <= 0) {
-      break;
-    }
-
-    if (line.length <= remainingChars) {
-      truncated.push(line);
-      remainingChars -= line.length;
-      continue;
-    }
-
-    truncated.push(line.slice(0, remainingChars));
-    break;
-  }
-
-  return truncated;
-}
-
-function formatLogValue(value: unknown): string {
-  if (typeof value === "string") {
-    return value;
-  }
-
-  if (value === undefined) {
-    return "undefined";
-  }
-
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return String(value);
-  }
-}
-
-function formatConsoleLine(values: unknown[]): string {
-  return values.map((value) => formatLogValue(value)).join(" ");
-}
 
 function toJsonValue(value: unknown, message: string): unknown {
   if (value === undefined) {
@@ -242,22 +135,12 @@ function toExecuteError(error: unknown, deadline: number): ExecuteError {
     error !== null &&
     "code" in error &&
     "message" in error &&
-    isKnownErrorCode((error as { code?: unknown }).code) &&
+    isKnownExecuteErrorCode((error as { code?: unknown }).code) &&
     typeof (error as { message?: unknown }).message === "string"
   ) {
-    const code = (error as { code: ExecuteError["code"] }).code;
-    const message = (error as { message: string }).message;
-
-    if (code === "runtime_error" && isStringLengthMemoryError(error, message)) {
-      return {
-        code: "memory_limit",
-        message,
-      };
-    }
-
     return {
-      code,
-      message,
+      code: (error as { code: ExecuteError["code"] }).code,
+      message: (error as { message: string }).message,
     };
   }
 
@@ -278,12 +161,11 @@ function toExecuteError(error: unknown, deadline: number): ExecuteError {
   ) {
     return {
       code: "timeout",
-      message: "Execution timed out",
+      message: getExecutionTimeoutMessage(),
     };
   }
 
   if (
-    isStringLengthMemoryError(error, message) ||
     normalizedMessage.includes("memory limit") ||
     normalizedMessage.includes("out of memory")
   ) {
@@ -324,25 +206,25 @@ async function runWithDeadline<T>(
   signal: AbortSignal,
 ): Promise<T> {
   if (signal.aborted || Date.now() > deadline) {
-    throw new ExecuteFailure("timeout", "Execution timed out");
+    throw new ExecuteFailure("timeout", getExecutionTimeoutMessage());
   }
 
   const timeoutMs = remainingTime(deadline);
   if (timeoutMs <= 0) {
-    throw new ExecuteFailure("timeout", "Execution timed out");
+    throw new ExecuteFailure("timeout", getExecutionTimeoutMessage());
   }
 
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
   return await new Promise<T>((resolve, reject) => {
     const onAbort = () => {
-      reject(new ExecuteFailure("timeout", "Execution timed out"));
+      reject(new ExecuteFailure("timeout", getExecutionTimeoutMessage()));
     };
 
     signal.addEventListener("abort", onAbort, { once: true });
     timeoutId = setTimeout(() => {
       signal.removeEventListener("abort", onAbort);
-      reject(new ExecuteFailure("timeout", "Execution timed out"));
+      reject(new ExecuteFailure("timeout", getExecutionTimeoutMessage()));
     }, timeoutMs);
 
     void operation.then(

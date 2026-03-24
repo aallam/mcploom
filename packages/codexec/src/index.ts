@@ -1,4 +1,20 @@
 export type { Executor } from "./executor/executor";
+export {
+  createExecutionContext,
+  formatConsoleLine,
+  getExecutionTimeoutMessage,
+  isKnownExecuteErrorCode,
+  normalizeThrownMessage,
+  normalizeThrownName,
+  truncateLogs,
+} from "./executor/shared";
+export {
+  assertValidIdentifier,
+  isReservedWord,
+  isValidIdentifier,
+  sanitizeIdentifier,
+  serializePropertyName,
+} from "./identifier";
 export { normalizeCode } from "./normalize";
 export { sanitizeToolName } from "./sanitize";
 export { ExecuteFailure, isExecuteFailure, isJsonSerializable } from "./errors";

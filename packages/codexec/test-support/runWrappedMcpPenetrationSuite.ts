@@ -280,6 +280,38 @@ export function runWrappedMcpPenetrationSuite(
       });
     });
 
+    it("does not trust guest error names when classifying runtime failures", async () => {
+      const { wrappedClient } = await createHostileMcpHarness(createExecutor);
+
+      const internalErrorResult = await wrappedClient.callTool({
+        name: "mcp_execute_code",
+        arguments: {
+          code: 'throw Object.assign(new Error("out of memory"), { name: "InternalError" })',
+        },
+      });
+      const rangeErrorResult = await wrappedClient.callTool({
+        name: "mcp_execute_code",
+        arguments: {
+          code: 'throw Object.assign(new Error("Invalid string length"), { name: "RangeError" })',
+        },
+      });
+
+      expect(internalErrorResult.structuredContent).toMatchObject({
+        error: {
+          code: "runtime_error",
+          message: "out of memory",
+        },
+        ok: false,
+      });
+      expect(rangeErrorResult.structuredContent).toMatchObject({
+        error: {
+          code: "runtime_error",
+          message: "Invalid string length",
+        },
+        ok: false,
+      });
+    });
+
     it("does not allow prototype pollution through tool results or guest payloads", async () => {
       const { wrappedClient } = await createHostileMcpHarness(createExecutor);
       const executeResult = await wrappedClient.callTool({

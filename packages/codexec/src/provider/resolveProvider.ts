@@ -5,6 +5,7 @@ import {
   isExecuteFailure,
   isJsonSerializable,
 } from "../errors";
+import { assertValidIdentifier } from "../identifier";
 import { sanitizeToolName } from "../sanitize";
 import { normalizeToolSchema } from "../schema/normalizeSchema";
 import { generateTypesFromJsonSchema } from "../typegen/jsonSchema";
@@ -18,54 +19,8 @@ import type {
 } from "../types";
 
 const DEFAULT_PROVIDER_NAME = "codemode";
-const RESERVED_NAMESPACE_WORDS = new Set([
-  "await",
-  "break",
-  "case",
-  "catch",
-  "class",
-  "const",
-  "continue",
-  "debugger",
-  "default",
-  "delete",
-  "do",
-  "else",
-  "enum",
-  "export",
-  "extends",
-  "false",
-  "finally",
-  "for",
-  "function",
-  "if",
-  "import",
-  "in",
-  "instanceof",
-  "new",
-  "null",
-  "return",
-  "super",
-  "switch",
-  "this",
-  "throw",
-  "true",
-  "try",
-  "typeof",
-  "var",
-  "void",
-  "while",
-  "with",
-  "yield",
-]);
-
 function assertValidNamespace(name: string): void {
-  if (
-    !/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name) ||
-    RESERVED_NAMESPACE_WORDS.has(name)
-  ) {
-    throw new Error(`Invalid provider namespace: ${name}`);
-  }
+  assertValidIdentifier(name, "provider namespace");
 }
 
 function compileValidator(
