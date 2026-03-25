@@ -11,11 +11,13 @@
     "packages/analytics",
     "packages/proxy",
     "packages/codexec",
+    "packages/codexec-protocol",
     "packages/codexec-quickjs",
-    "packages/codexec-isolated-vm"
+    "packages/codexec-isolated-vm",
+    "packages/codexec-worker"
   ],
   "scripts": {
-    "build": "npm run build --workspace @mcploom/analytics && npm run build --workspace @mcploom/proxy && npm run build --workspace @mcploom/codexec && npm run build --workspace @mcploom/codexec-quickjs && npm run build --workspace @mcploom/codexec-isolated-vm",
+    "build": "npm run build --workspace @mcploom/analytics && npm run build --workspace @mcploom/proxy && npm run build --workspace @mcploom/codexec && npm run build --workspace @mcploom/codexec-protocol && npm run build --workspace @mcploom/codexec-quickjs && npm run build --workspace @mcploom/codexec-isolated-vm && npm run build --workspace @mcploom/codexec-worker",
     "clean": "rm -rf coverage dist packages/*/dist",
     "example:analytics": "node --import tsx examples/analytics-track-handlers.ts",
     "example:codexec": "node --import tsx examples/codexec-basic.ts",

@@ -8,9 +8,11 @@
       "@mcploom/codexec": ["./packages/codexec/src/index.ts"],
       "@mcploom/codexec/mcp": ["./packages/codexec/src/mcp/index.ts"],
       "@mcploom/codexec-quickjs": ["./packages/codexec-quickjs/src/index.ts"],
+      "@mcploom/codexec-protocol": ["./packages/codexec-protocol/src/index.ts"],
       "@mcploom/codexec-isolated-vm": [
         "./packages/codexec-isolated-vm/src/index.ts"
-      ]
+      ],
+      "@mcploom/codexec-worker": ["./packages/codexec-worker/src/index.ts"]
     },
     "types": ["node", "vitest/globals"]
   },
@@ -21,7 +23,9 @@
     "packages/proxy/**/*.ts",
     "packages/codexec/**/*.ts",
     "packages/codexec-quickjs/**/*.ts",
+    "packages/codexec-protocol/**/*.ts",
     "packages/codexec-isolated-vm/**/*.ts",
+    "packages/codexec-worker/**/*.ts",
     "vitest.config.ts"
   ],
   "exclude": ["**/node_modules", "packages/*/dist"]

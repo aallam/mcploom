@@ -29,10 +29,24 @@ export default defineConfig({
         ),
       },
       {
+        find: "@mcploom/codexec-protocol",
+        replacement: path.join(
+          repoRoot,
+          "packages/codexec-protocol/src/index.ts",
+        ),
+      },
+      {
         find: "@mcploom/codexec-isolated-vm",
         replacement: path.join(
           repoRoot,
           "packages/codexec-isolated-vm/src/index.ts",
+        ),
+      },
+      {
+        find: "@mcploom/codexec-worker",
+        replacement: path.join(
+          repoRoot,
+          "packages/codexec-worker/src/index.ts",
         ),
       },
       {
