@@ -1,6 +1,7 @@
 import {
   ExecuteFailure,
   createExecutionContext,
+  getExecutionTimeoutMessage,
   isExecuteFailure,
   isJsonSerializable,
   normalizeThrownMessage,
@@ -50,6 +51,16 @@ export function createToolCallDispatcher(
     }
 
     try {
+      if (signal.aborted) {
+        return {
+          error: {
+            code: "timeout",
+            message: getExecutionTimeoutMessage(),
+          },
+          ok: false,
+        };
+      }
+
       const result = await descriptor.execute(
         call.input,
         createExecutionContext(
