@@ -263,18 +263,25 @@ function createToolHandle(
 
     signal.addEventListener("abort", onAbort, { once: true });
 
-    void Promise.resolve()
-      .then(async () => {
+    let responsePromise: Promise<ToolCallResult>;
+
+    try {
         if (signal.aborted) {
           throw new ExecuteFailure("timeout", getExecutionTimeoutMessage());
         }
 
-        return onToolCall({
-          input,
-          providerName,
-          safeToolName,
-        });
-      })
+        responsePromise = Promise.resolve(
+          onToolCall({
+            input,
+            providerName,
+            safeToolName,
+          }),
+        );
+    } catch (error) {
+      responsePromise = Promise.reject(error);
+    }
+
+    void responsePromise
       .then((response) => {
         signal.removeEventListener("abort", onAbort);
         if (!context.alive || !deferred.alive) {
