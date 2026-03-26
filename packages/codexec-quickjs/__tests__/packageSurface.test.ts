@@ -12,4 +12,12 @@ describe("@mcploom/codexec-quickjs package surface", () => {
 
     expect(runner).toHaveProperty("runQuickJsSession");
   });
+
+  it("exports the QuickJS protocol endpoint from a dedicated subpath", async () => {
+    const endpoint = await import(
+      "@mcploom/codexec-quickjs/runner/protocol-endpoint"
+    );
+
+    expect(endpoint).toHaveProperty("attachQuickJsProtocolEndpoint");
+  });
 });

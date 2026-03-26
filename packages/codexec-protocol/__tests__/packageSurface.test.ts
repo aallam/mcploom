@@ -6,5 +6,6 @@ describe("@mcploom/codexec-protocol package surface", () => {
 
     expect(protocol).toHaveProperty("extractProviderManifests");
     expect(protocol).toHaveProperty("createToolCallDispatcher");
+    expect(protocol).toHaveProperty("runHostTransportSession");
   });
 });

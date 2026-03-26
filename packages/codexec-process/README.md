@@ -45,6 +45,7 @@ const result = await executor.execute("await tools.echo({ ok: true })", [
 - This package improves lifecycle isolation by moving the QuickJS runtime to a fresh child process.
 - It is still not documented as a hard hostile-code boundary equivalent to a container or VM.
 - Providers remain the real capability boundary.
+- Internally it is a thin transport adapter over the shared `codexec-protocol` host session and the shared QuickJS protocol endpoint.
 
 ## Examples
 

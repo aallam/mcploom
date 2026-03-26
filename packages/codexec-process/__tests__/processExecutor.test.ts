@@ -16,22 +16,27 @@ class FakeChildProcess extends EventEmitter {
 
 const state = vi.hoisted(() => ({
   child: undefined as FakeChildProcess | undefined,
+  options: undefined as Record<string, unknown> | undefined,
 }));
 
 vi.mock("node:child_process", () => ({
-  fork: vi.fn(() => {
+  fork: vi.fn(
+    (_path: string, _args: string[], options?: Record<string, unknown>) => {
     const child = new FakeChildProcess();
+    state.options = options;
     state.child = child;
     queueMicrotask(() => {
       child.emit("exit", 17, null);
     });
     return child;
-  }),
+    },
+  ),
 }));
 
 describe("ProcessExecutor", () => {
   beforeEach(() => {
     state.child = undefined;
+    state.options = undefined;
   });
 
   it("returns internal_error when the child exits before sending a result", async () => {
@@ -46,6 +51,17 @@ describe("ProcessExecutor", () => {
         message: "Child process exited unexpectedly with code 17",
       },
       ok: false,
+    });
+  });
+
+  it("uses explicit source bootstrap conditions in repo source mode", async () => {
+    const { ProcessExecutor } = await import("../src/index");
+    const executor = new ProcessExecutor();
+
+    await executor.execute("1 + 1", []);
+
+    expect(state.options).toMatchObject({
+      execArgv: expect.arrayContaining(["--conditions=source", "--import", "tsx"]),
     });
   });
 });

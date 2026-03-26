@@ -22,7 +22,7 @@ async function waitForCondition(
   return predicate();
 }
 
-const WRAPPED_TOOL_STATE_TIMEOUT_MS = 2_000;
+const WRAPPED_TOOL_STATE_TIMEOUT_MS = 3_000;
 
 export function runWrappedMcpPenetrationSuite(
   label: string,
@@ -53,7 +53,10 @@ export function runWrappedMcpPenetrationSuite(
       const { state, wrappedClient } = await createHostileMcpHarness(
         createExecutor,
         {
-          timeoutMs: 100,
+          // Transport-backed executors now count bootstrap time inside the same
+          // timeout budget, so wrapped execution needs a little more headroom
+          // to prove the wrapped tool started before the timeout path wins.
+          timeoutMs: 2_000,
         },
       );
       const executeResultPromise = wrappedClient.callTool({

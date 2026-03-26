@@ -45,11 +45,11 @@ Swap in `@mcploom/codexec-process` when you want the QuickJS runtime to live in 
 ## Security Posture
 
 - Codexec gives you fresh execution state, JSON-only tool boundaries, schema validation, timeout handling, memory limits, and bounded logs.
-- Codexec does not give you a hard security boundary for hostile code. It runs guest code in-process.
+- Codexec does not give you a hard security boundary for hostile code by itself. The actual boundary depends on which executor you pair it with.
 - Providers are explicit capability grants. Every tool you expose is authority you are handing to guest code.
 - In the default deployment model, provider and MCP tool definitions are controlled by the application, not by the end user.
 - Third-party MCP integrations should be reviewed as dependency-trust decisions, not folded into the primary end-user attacker model.
-- If the code source is hostile, run codexec behind stronger isolation such as a separate process, container, or VM.
+- If the code source is hostile, prefer stronger isolation such as `@mcploom/codexec-process`, a container, or a VM.
 
 ## Architecture Docs
 

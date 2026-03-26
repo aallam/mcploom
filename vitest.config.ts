@@ -22,6 +22,13 @@ export default defineConfig({
         replacement: path.join(repoRoot, "packages/codexec/src/mcp/index.ts"),
       },
       {
+        find: "@mcploom/codexec-quickjs/runner/protocol-endpoint",
+        replacement: path.join(
+          repoRoot,
+          "packages/codexec-quickjs/src/runner/protocolEndpoint.ts",
+        ),
+      },
+      {
         find: "@mcploom/codexec-quickjs/runner",
         replacement: path.join(
           repoRoot,

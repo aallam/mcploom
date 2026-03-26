@@ -23,8 +23,8 @@ flowchart LR
     QJS["@mcploom/codexec-quickjs<br/>in-process QuickJS executor + reusable runner"]
     PROC["@mcploom/codexec-process<br/>child-process QuickJS executor"]
     IVM["@mcploom/codexec-isolated-vm<br/>in-process isolated-vm executor + reusable runner"]
-    PROTO["@mcploom/codexec-protocol<br/>transport messages + transport-facing helpers"]
-    WORKER["@mcploom/codexec-worker<br/>worker-thread executor"]
+    PROTO["@mcploom/codexec-protocol<br/>transport messages + shared host session"]
+    WORKER["@mcploom/codexec-worker<br/>worker-thread QuickJS executor"]
     MCP["MCP sources and wrapped servers"]
 
     APP --> CORE
@@ -35,6 +35,7 @@ flowchart LR
     CORE --> MCP
     PROC --> PROTO
     WORKER --> PROTO
+    PROC --> QJS
     WORKER --> QJS
 ```
 
@@ -44,9 +45,9 @@ flowchart LR
 | ------------------------------ | -------------------------------------------------------------------------------------------------- |
 | `@mcploom/codexec`             | Core types, provider resolution, shared runner semantics, and MCP adapters                         |
 | `@mcploom/codexec-quickjs`     | Default executor backend using a fresh QuickJS runtime per execution and a reusable QuickJS runner |
-| `@mcploom/codexec-process`     | Child-process executor that runs the QuickJS session behind a Node IPC boundary                    |
+| `@mcploom/codexec-process`     | Child-process executor that runs the QuickJS session behind Node IPC                               |
 | `@mcploom/codexec-isolated-vm` | Alternate executor backend using a fresh `isolated-vm` context and a reusable isolated-vm runner   |
-| `@mcploom/codexec-protocol`    | Transport-safe execution messages plus transport-facing re-exports around the shared runner model  |
+| `@mcploom/codexec-protocol`    | Transport-safe execution messages plus the shared host session used by worker/process executors    |
 | `@mcploom/codexec-worker`      | Worker-thread executor that runs the QuickJS session behind a message boundary                     |
 
 ## End-to-End Execution Model
@@ -102,4 +103,4 @@ Key implications:
 
 ## Current Architecture in One Paragraph
 
-Today, `@mcploom/codexec` owns the stable execution contract, provider resolution, shared runner semantics, and MCP adapters. `@mcploom/codexec-quickjs` and `@mcploom/codexec-isolated-vm` each expose a runtime-specific reusable runner, while `@mcploom/codexec-process` and `@mcploom/codexec-worker` add child-process and worker-thread transports around the QuickJS runner. `@mcploom/codexec-protocol` stays focused on the transport boundary: message shapes plus transport-facing helpers that line up with the shared runner model without owning a second copy of executor semantics.
+Today, `@mcploom/codexec` owns the stable execution contract, provider resolution, shared runner semantics, and MCP adapters. `@mcploom/codexec-quickjs` and `@mcploom/codexec-isolated-vm` each expose a runtime-specific reusable runner. `@mcploom/codexec-process` and `@mcploom/codexec-worker` are now thin transport adapters around the shared QuickJS protocol endpoint, while `@mcploom/codexec-protocol` owns the transport boundary: message shapes plus the shared host session used to drive transport-backed execution without copying executor semantics.
