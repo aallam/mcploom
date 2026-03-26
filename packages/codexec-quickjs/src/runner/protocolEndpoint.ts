@@ -9,11 +9,17 @@ import type {
 
 import { runQuickJsSession } from "./index.ts";
 
+/**
+ * Minimal worker/process-side port used by the shared QuickJS protocol endpoint.
+ */
 export interface QuickJsProtocolPort {
   onMessage(handler: (message: DispatcherMessage) => void): void | (() => void);
   send(message: RunnerMessage): void;
 }
 
+/**
+ * Attaches the shared QuickJS protocol loop to a worker/process messaging port.
+ */
 export function attachQuickJsProtocolEndpoint(
   port: QuickJsProtocolPort,
 ): () => void {

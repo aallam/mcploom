@@ -12,12 +12,18 @@ import type { DispatcherMessage, RunnerMessage, ToolCallMessage } from "./messag
 const DEFAULT_CANCEL_GRACE_MS = 25;
 const HOST_TIMEOUT_BACKSTOP_MS = 100;
 
+/**
+ * Describes an unexpected transport shutdown reported to the host session.
+ */
 export interface TransportCloseReason {
   code?: number | null;
   message: string;
   signal?: NodeJS.Signals | null;
 }
 
+/**
+ * Minimal parent-side transport contract for worker/process-backed execution.
+ */
 export interface HostTransport {
   dispose(): Promise<void> | void;
   onClose(handler: (reason?: TransportCloseReason) => void): () => void;
@@ -27,6 +33,9 @@ export interface HostTransport {
   terminate(): Promise<void> | void;
 }
 
+/**
+ * Configuration for one transport-backed execution session.
+ */
 export interface HostTransportSessionOptions {
   cancelGraceMs?: number;
   code: string;
@@ -52,6 +61,10 @@ function toFailureResult(
   };
 }
 
+/**
+ * Runs one host-side transport session, including timeout, cancellation,
+ * tool-call dispatch, and result settlement.
+ */
 export async function runHostTransportSession(
   options: HostTransportSessionOptions,
 ): Promise<ExecuteResult> {
@@ -66,7 +79,39 @@ export async function runHostTransportSession(
     let finished = false;
     let timeoutTriggered = false;
     let forceTerminateTimer: NodeJS.Timeout | undefined;
-    let timeoutTimer: NodeJS.Timeout | undefined;
+    const timeoutTimer = setTimeout(() => {
+      if (finished) {
+        return;
+      }
+
+      timeoutTriggered = true;
+      abortController.abort();
+      send({
+        id: options.executionId,
+        type: "cancel",
+      });
+      forceTerminateTimer = setTimeout(() => {
+        if (finished) {
+          return;
+        }
+
+        void Promise.resolve(options.transport.terminate())
+          .catch(() => {})
+          .finally(() => {
+            if (finished) {
+              return;
+            }
+
+            finish(
+              toFailureResult(
+                startedAt,
+                true,
+                getExecutionTimeoutMessage(),
+              ),
+            );
+          });
+      }, cancelGraceMs);
+    }, options.runtimeOptions.timeoutMs + HOST_TIMEOUT_BACKSTOP_MS);
 
     const cancelGraceMs = options.cancelGraceMs ?? DEFAULT_CANCEL_GRACE_MS;
 
@@ -168,40 +213,6 @@ export async function runHostTransportSession(
     const offMessage = options.transport.onMessage(onMessage);
     const offError = options.transport.onError(onError);
     const offClose = options.transport.onClose(onClose);
-
-    timeoutTimer = setTimeout(() => {
-      if (finished) {
-        return;
-      }
-
-      timeoutTriggered = true;
-      abortController.abort();
-      send({
-        id: options.executionId,
-        type: "cancel",
-      });
-      forceTerminateTimer = setTimeout(() => {
-        if (finished) {
-          return;
-        }
-
-        void Promise.resolve(options.transport.terminate())
-          .catch(() => {})
-          .finally(() => {
-            if (finished) {
-              return;
-            }
-
-            finish(
-              toFailureResult(
-                startedAt,
-                true,
-                getExecutionTimeoutMessage(),
-              ),
-            );
-          });
-      }, cancelGraceMs);
-    }, options.runtimeOptions.timeoutMs + HOST_TIMEOUT_BACKSTOP_MS);
 
     send({
       code: options.code,
