@@ -12,6 +12,7 @@
       "@mcploom/codexec-quickjs/runner": [
         "./packages/codexec-quickjs/src/runner/index.ts"
       ],
+      "@mcploom/codexec-process": ["./packages/codexec-process/src/index.ts"],
       "@mcploom/codexec-worker": ["./packages/codexec-worker/src/index.ts"],
       "@mcploom/codexec-isolated-vm": [
         "./packages/codexec-isolated-vm/src/index.ts"
@@ -30,6 +31,7 @@
     "packages/codexec/**/*.ts",
     "packages/codexec-protocol/**/*.ts",
     "packages/codexec-quickjs/**/*.ts",
+    "packages/codexec-process/**/*.ts",
     "packages/codexec-worker/**/*.ts",
     "packages/codexec-isolated-vm/**/*.ts",
     "vitest.config.ts"

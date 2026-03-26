@@ -22,6 +22,8 @@ async function waitForCondition(
   return predicate();
 }
 
+const WRAPPED_TOOL_STATE_TIMEOUT_MS = 2_000;
+
 export function runWrappedMcpPenetrationSuite(
   label: string,
   createExecutor: PenetrationExecutorFactory,
@@ -60,9 +62,12 @@ export function runWrappedMcpPenetrationSuite(
           code: "await mcp.wait_until_abort({})",
         },
       });
-      expect(await waitForCondition(() => state.waitUntilAbortStarted)).toBe(
-        true,
-      );
+      expect(
+        await waitForCondition(
+          () => state.waitUntilAbortStarted,
+          WRAPPED_TOOL_STATE_TIMEOUT_MS,
+        ),
+      ).toBe(true);
       const executeResult = await executeResultPromise;
 
       expect(executeResult.isError).toBe(true);
@@ -72,9 +77,12 @@ export function runWrappedMcpPenetrationSuite(
         },
         ok: false,
       });
-      expect(await waitForCondition(() => state.waitUntilAbortAborted)).toBe(
-        true,
-      );
+      expect(
+        await waitForCondition(
+          () => state.waitUntilAbortAborted,
+          WRAPPED_TOOL_STATE_TIMEOUT_MS,
+        ),
+      ).toBe(true);
     });
 
     it("does not expose ambient Node globals through wrapped execution", async () => {

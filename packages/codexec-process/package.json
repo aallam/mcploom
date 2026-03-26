@@ -1,0 +1,48 @@
+{
+  "name": "@mcploom/codexec-process",
+  "version": "0.1.0",
+  "description": "Child process executor for the mcploom codexec core package.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsdown"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "child-process",
+    "quickjs",
+    "code-execution"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aallam/mcploom.git",
+    "directory": "packages/codexec-process"
+  },
+  "homepage": "https://github.com/aallam/mcploom/tree/main/packages/codexec-process#readme",
+  "bugs": "https://github.com/aallam/mcploom/issues",
+  "dependencies": {
+    "@mcploom/codexec": "^0.2.5",
+    "@mcploom/codexec-protocol": "^0.1.0",
+    "@mcploom/codexec-quickjs": "^0.1.6"
+  }
+}

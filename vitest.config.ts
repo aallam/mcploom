@@ -37,7 +37,17 @@ export default defineConfig({
       },
       {
         find: "@mcploom/codexec-worker",
-        replacement: path.join(repoRoot, "packages/codexec-worker/src/index.ts"),
+        replacement: path.join(
+          repoRoot,
+          "packages/codexec-worker/src/index.ts",
+        ),
+      },
+      {
+        find: "@mcploom/codexec-process",
+        replacement: path.join(
+          repoRoot,
+          "packages/codexec-process/src/index.ts",
+        ),
       },
       {
         find: "@mcploom/codexec-protocol",
