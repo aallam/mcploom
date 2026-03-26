@@ -9,7 +9,7 @@
 
 - you explicitly want the `isolated-vm` runtime instead of QuickJS
 - your environment can support the native addon install
-- you are prepared to run Node 20+ with `--no-node-snapshot`
+- you are prepared to run Node 22+ with `--no-node-snapshot`
 
 If you want the simpler default backend, use [`@mcploom/codexec-quickjs`](https://www.npmjs.com/package/@mcploom/codexec-quickjs) instead.
 
@@ -27,7 +27,7 @@ npm install @mcploom/codexec @mcploom/codexec-isolated-vm
 
 ## Requirements
 
-- Node 20+ must run with `--no-node-snapshot`
+- Node 22+ must run with `--no-node-snapshot`
 - the optional `isolated-vm` native dependency must install successfully in the host environment
 - native-addon failures are surfaced when `IsolatedVmExecutor` is constructed or used
 
