@@ -12,15 +12,15 @@ This page explains how the current executor packages differ and what trade-offs 
 
 ```mermaid
 flowchart LR
-    HOST[Host application]
-    QJS[QuickJsExecutor]
-    QJSRT[QuickJS runtime]
-    IVM[IsolatedVmExecutor]
-    IVMRT[isolated-vm context]
-    WORKER[WorkerExecutor]
-    THREAD[Worker thread]
-    PROTO[codexec-protocol]
-    WQJS[QuickJS runtime in worker]
+    HOST["Host application"]
+    QJS["QuickJsExecutor"]
+    QJSRT["QuickJS runtime"]
+    IVM["IsolatedVmExecutor"]
+    IVMRT["isolated-vm context"]
+    WORKER["WorkerExecutor"]
+    THREAD["Worker thread"]
+    PROTO["codexec-protocol"]
+    WQJS["QuickJS runtime in worker"]
 
     HOST --> QJS --> QJSRT
     HOST --> IVM --> IVMRT

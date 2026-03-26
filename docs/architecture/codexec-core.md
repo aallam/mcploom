@@ -26,14 +26,14 @@ The main public concepts are:
 
 ```mermaid
 flowchart LR
-    TP[ToolProvider]
-    NS[Validate namespace identifier]
-    NAMES[Sanitize tool names<br/>and resolve collisions]
-    SCHEMA[Normalize schemas<br/>JSON Schema / Zod / raw Zod shape]
-    VALIDATE[Compile AJV validators]
-    WRAP[Wrap execute()<br/>validation + serialization + tool_error mapping]
-    TYPES[Generate namespace types]
-    RTP[ResolvedToolProvider]
+    TP["ToolProvider"]
+    NS["Validate namespace identifier"]
+    NAMES["Sanitize tool names<br/>and resolve collisions"]
+    SCHEMA["Normalize schemas<br/>JSON Schema / Zod / raw Zod shape"]
+    VALIDATE["Compile AJV validators"]
+    WRAP["Wrap execute()<br/>validation + serialization + tool_error mapping"]
+    TYPES["Generate namespace types"]
+    RTP["ResolvedToolProvider"]
 
     TP --> NS --> NAMES --> SCHEMA --> VALIDATE --> WRAP --> TYPES --> RTP
 ```
@@ -120,23 +120,23 @@ Codexec keeps a fixed error vocabulary so callers and MCP wrappers can reason ab
 
 ```mermaid
 flowchart TD
-    START[Thrown value or runtime failure]
-    EXECFAIL{ExecuteFailure?}
-    SERIAL{JSON-safe boundary failure?}
-    VALID{Schema validation failure?}
-    HOST{Host tool exception?}
-    GUEST{Guest/runtime failure?}
+    START["Thrown value or runtime failure"]
+    EXECFAIL{"ExecuteFailure?"}
+    SERIAL{"JSON-safe boundary failure?"}
+    VALID{"Schema validation failure?"}
+    HOST{"Host tool exception?"}
+    GUEST{"Guest/runtime failure?"}
 
     START --> EXECFAIL
-    EXECFAIL -->|yes| OUT1[Return stored ExecuteError code]
+    EXECFAIL -->|yes| OUT1["Return stored ExecuteError code"]
     EXECFAIL -->|no| SERIAL
-    SERIAL -->|yes| OUT2[serialization_error]
+    SERIAL -->|yes| OUT2["serialization_error"]
     SERIAL -->|no| VALID
-    VALID -->|yes| OUT3[validation_error]
+    VALID -->|yes| OUT3["validation_error"]
     VALID -->|no| HOST
-    HOST -->|yes| OUT4[tool_error]
+    HOST -->|yes| OUT4["tool_error"]
     HOST -->|no| GUEST
-    GUEST --> OUT5[runtime-specific classification]
+    GUEST --> OUT5["runtime-specific classification"]
 ```
 
 Executors are responsible for their own runtime-specific classification rules, but they all return the same public `ExecuteResult` envelope.

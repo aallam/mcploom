@@ -18,13 +18,13 @@ This doc set is for two audiences:
 
 ```mermaid
 flowchart LR
-    APP[Host application]
+    APP["Host application"]
     CORE["@mcploom/codexec<br/>provider resolution + MCP adapters"]
     QJS["@mcploom/codexec-quickjs<br/>in-process QuickJS executor"]
     IVM["@mcploom/codexec-isolated-vm<br/>in-process isolated-vm executor"]
     PROTO["@mcploom/codexec-protocol<br/>manifests + messages + dispatcher"]
     WORKER["@mcploom/codexec-worker<br/>worker-thread executor"]
-    MCP[MCP sources and wrapped servers]
+    MCP["MCP sources and wrapped servers"]
 
     APP --> CORE
     APP --> QJS
@@ -78,11 +78,11 @@ Codexec reduces accidental exposure, but it does not claim a hard security bound
 
 ```mermaid
 flowchart LR
-    USER[Guest code author]
-    GUEST[Guest JavaScript]
-    PROVIDERS[Resolved providers]
-    SYSTEMS[Host systems and APIs]
-    MCP3P[Third-party MCP servers]
+    USER["Guest code author"]
+    GUEST["Guest JavaScript"]
+    PROVIDERS["Resolved providers"]
+    SYSTEMS["Host systems and APIs"]
+    MCP3P["Third-party MCP servers"]
 
     USER --> GUEST
     GUEST -->|tool inputs| PROVIDERS

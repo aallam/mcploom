@@ -14,12 +14,12 @@ The MCP adapter layer lets codexec sit on either side of an MCP tool catalog:
 
 ```mermaid
 flowchart LR
-    UP[Upstream MCP client or server]
-    WRAP[openMcpToolProvider / createMcpToolProvider]
-    PROVIDER[ResolvedToolProvider<br/>namespace + types + tool wrappers]
-    EXEC[Executor]
-    SERVER[codeMcpServer]
-    DOWN[Downstream MCP client]
+    UP["Upstream MCP client or server"]
+    WRAP["openMcpToolProvider / createMcpToolProvider"]
+    PROVIDER["ResolvedToolProvider<br/>namespace + types + tool wrappers"]
+    EXEC["Executor"]
+    SERVER["codeMcpServer"]
+    DOWN["Downstream MCP client"]
 
     UP --> WRAP --> PROVIDER
     PROVIDER --> EXEC
@@ -79,19 +79,19 @@ That split is intentional today:
 ```mermaid
 flowchart TB
     subgraph Current
-        C1[QuickJsExecutor]
-        C2[WorkerExecutor]
-        C3[IsolatedVmExecutor]
-        P[Protocol]
+        C1["QuickJsExecutor"]
+        C2["WorkerExecutor"]
+        C3["IsolatedVmExecutor"]
+        P["Protocol"]
         C1 --> P
         C2 --> P
         C3 -. direct bridge .-> C3
     end
 
     subgraph NextStepDirection
-        N1[worker or process runner]
-        N2[remote runner service]
-        N3[future isolated-vm transport-backed runner]
+        N1["worker or process runner"]
+        N2["remote runner service"]
+        N3["future isolated-vm transport-backed runner"]
         N1 --> P
         N2 --> P
         N3 --> P
