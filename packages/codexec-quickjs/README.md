@@ -21,9 +21,9 @@ QuickJS executor backend for `@mcploom/codexec`.
 
 ## Architecture Docs
 
-- [Codexec architecture overview](https://github.com/aallam/mcploom/blob/main/docs/architecture/codexec-overview.md)
-- [Codexec executors](https://github.com/aallam/mcploom/blob/main/docs/architecture/codexec-executors.md)
-- [Codexec MCP adapters and protocol](https://github.com/aallam/mcploom/blob/main/docs/architecture/codexec-mcp-and-protocol.md)
+- [Codexec architecture overview](https://github.com/aallam/mcploom/blob/main/docs/codexec/architecture/README.md)
+- [Codexec executors](https://github.com/aallam/mcploom/blob/main/docs/codexec/architecture/codexec-executors.md)
+- [Codexec MCP adapters and protocol](https://github.com/aallam/mcploom/blob/main/docs/codexec/architecture/codexec-mcp-and-protocol.md)
 
 ## Examples
 
@@ -40,6 +40,7 @@ npm install @mcploom/codexec @mcploom/codexec-quickjs
 ```
 
 Advanced consumers can also import the reusable QuickJS runner from `@mcploom/codexec-quickjs/runner`.
+Transport-backed executors such as `@mcploom/codexec-worker` and `@mcploom/codexec-process` also reuse the shared QuickJS protocol endpoint from `@mcploom/codexec-quickjs/runner/protocol-endpoint`.
 
 ## Usage
 

@@ -12,6 +12,9 @@
       "@mcploom/codexec-quickjs/runner": [
         "./packages/codexec-quickjs/src/runner/index.ts"
       ],
+      "@mcploom/codexec-quickjs/runner/protocol-endpoint": [
+        "./packages/codexec-quickjs/src/runner/protocolEndpoint.ts"
+      ],
       "@mcploom/codexec-process": ["./packages/codexec-process/src/index.ts"],
       "@mcploom/codexec-worker": ["./packages/codexec-worker/src/index.ts"],
       "@mcploom/codexec-isolated-vm": [

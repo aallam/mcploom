@@ -45,9 +45,10 @@ const result = await executor.execute("await tools.echo({ ok: true })", [
 - This package improves lifecycle isolation by moving the QuickJS runtime to a worker thread.
 - It is still same-process execution and is not documented as a hard hostile-code boundary.
 - Providers remain the real capability boundary.
+- Internally it is a thin transport adapter over the shared `codexec-protocol` host session and the shared QuickJS protocol endpoint.
 
 ## Examples
 
 - [Worker-backed codexec execution](https://github.com/aallam/mcploom/blob/main/examples/codexec-worker.ts)
-- [Architecture overview](https://github.com/aallam/mcploom/blob/main/docs/architecture/codexec-overview.md)
-- [Executors architecture](https://github.com/aallam/mcploom/blob/main/docs/architecture/codexec-executors.md)
+- [Architecture overview](https://github.com/aallam/mcploom/blob/main/docs/codexec/architecture/README.md)
+- [Executors architecture](https://github.com/aallam/mcploom/blob/main/docs/codexec/architecture/codexec-executors.md)

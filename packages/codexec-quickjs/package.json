@@ -12,14 +12,22 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
     "./runner": {
+      "source": "./src/runner/index.ts",
       "types": "./dist/runner/index.d.ts",
       "import": "./dist/runner/index.js",
       "require": "./dist/runner/index.cjs"
+    },
+    "./runner/protocol-endpoint": {
+      "source": "./src/runner/protocolEndpoint.ts",
+      "types": "./dist/runner/protocolEndpoint.d.ts",
+      "import": "./dist/runner/protocolEndpoint.js",
+      "require": "./dist/runner/protocolEndpoint.cjs"
     }
   },
   "sideEffects": false,
