@@ -1,7 +1,7 @@
 {
-  "name": "@mcploom/codexec",
-  "version": "0.2.5",
-  "description": "Executor-agnostic MCP code execution core and MCP adapters.",
+  "name": "@mcploom/codexec-protocol",
+  "version": "0.1.0",
+  "description": "Transport-safe protocol and dispatcher helpers for mcploom codexec executors.",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -15,11 +15,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    },
-    "./mcp": {
-      "types": "./dist/mcp/index.d.ts",
-      "import": "./dist/mcp/index.js",
-      "require": "./dist/mcp/index.cjs"
     }
   },
   "sideEffects": false,
@@ -34,21 +29,18 @@
   "keywords": [
     "mcp",
     "model-context-protocol",
+    "protocol",
     "sandbox",
-    "code-execution",
-    "tools"
+    "code-execution"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aallam/mcploom.git",
-    "directory": "packages/codexec"
+    "directory": "packages/codexec-protocol"
   },
-  "homepage": "https://github.com/aallam/mcploom/tree/main/packages/codexec#readme",
+  "homepage": "https://github.com/aallam/mcploom/tree/main/packages/codexec-protocol#readme",
   "bugs": "https://github.com/aallam/mcploom/issues",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.1",
-    "acorn": "^8.15.0",
-    "ajv": "^8.17.1",
-    "zod": "^4.3.6"
+    "@mcploom/codexec": "^0.2.5"
   }
 }

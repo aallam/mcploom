@@ -22,10 +22,28 @@ export default defineConfig({
         replacement: path.join(repoRoot, "packages/codexec/src/mcp/index.ts"),
       },
       {
+        find: "@mcploom/codexec-quickjs/runner",
+        replacement: path.join(
+          repoRoot,
+          "packages/codexec-quickjs/src/runner/index.ts",
+        ),
+      },
+      {
         find: "@mcploom/codexec-quickjs",
         replacement: path.join(
           repoRoot,
           "packages/codexec-quickjs/src/index.ts",
+        ),
+      },
+      {
+        find: "@mcploom/codexec-worker",
+        replacement: path.join(repoRoot, "packages/codexec-worker/src/index.ts"),
+      },
+      {
+        find: "@mcploom/codexec-protocol",
+        replacement: path.join(
+          repoRoot,
+          "packages/codexec-protocol/src/index.ts",
         ),
       },
       {

@@ -497,7 +497,7 @@ export class IsolatedVmExecutor implements Executor {
         error: {
           code: "internal_error",
           message:
-            "isolated-vm requires Node to run with --no-node-snapshot on Node 20+",
+            "isolated-vm requires Node to run with --no-node-snapshot on Node 22+",
         },
         logs,
         ok: false,
