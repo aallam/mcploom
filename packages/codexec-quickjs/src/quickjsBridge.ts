@@ -1,6 +1,9 @@
 import type { QuickJSContext, QuickJSHandle } from "quickjs-emscripten";
 
-import { ExecuteFailure, type ExecuteErrorCode } from "@mcploom/codexec";
+import {
+  ExecuteFailure,
+  type ExecuteErrorCode,
+} from "../../codexec/src/runtime.ts";
 
 /**
  * Creates a guest-visible error object that carries a trusted host error code marker.

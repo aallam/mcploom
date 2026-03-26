@@ -1,7 +1,7 @@
 {
-  "name": "@mcploom/codexec-quickjs",
-  "version": "0.1.6",
-  "description": "QuickJS executor for the mcploom codexec core package.",
+  "name": "@mcploom/codexec-protocol",
+  "version": "0.1.0",
+  "description": "Transport-safe protocol and dispatcher helpers for mcploom codexec executors.",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -15,11 +15,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    },
-    "./runner": {
-      "types": "./dist/runner/index.d.ts",
-      "import": "./dist/runner/index.js",
-      "require": "./dist/runner/index.cjs"
     }
   },
   "sideEffects": false,
@@ -34,20 +29,18 @@
   "keywords": [
     "mcp",
     "model-context-protocol",
-    "quickjs",
+    "protocol",
     "sandbox",
     "code-execution"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aallam/mcploom.git",
-    "directory": "packages/codexec-quickjs"
+    "directory": "packages/codexec-protocol"
   },
-  "homepage": "https://github.com/aallam/mcploom/tree/main/packages/codexec-quickjs#readme",
+  "homepage": "https://github.com/aallam/mcploom/tree/main/packages/codexec-protocol#readme",
   "bugs": "https://github.com/aallam/mcploom/issues",
   "dependencies": {
-    "@mcploom/codexec": "^0.2.5",
-    "@mcploom/codexec-protocol": "^0.1.0",
-    "quickjs-emscripten": "^0.31.0"
+    "@mcploom/codexec": "^0.2.5"
   }
 }

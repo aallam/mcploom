@@ -7,7 +7,12 @@
       "@mcploom/proxy": ["./packages/proxy/src/index.ts"],
       "@mcploom/codexec": ["./packages/codexec/src/index.ts"],
       "@mcploom/codexec/mcp": ["./packages/codexec/src/mcp/index.ts"],
+      "@mcploom/codexec-protocol": ["./packages/codexec-protocol/src/index.ts"],
       "@mcploom/codexec-quickjs": ["./packages/codexec-quickjs/src/index.ts"],
+      "@mcploom/codexec-quickjs/runner": [
+        "./packages/codexec-quickjs/src/runner/index.ts"
+      ],
+      "@mcploom/codexec-worker": ["./packages/codexec-worker/src/index.ts"],
       "@mcploom/codexec-isolated-vm": [
         "./packages/codexec-isolated-vm/src/index.ts"
       ]
@@ -20,7 +25,9 @@
     "packages/analytics/**/*.ts",
     "packages/proxy/**/*.ts",
     "packages/codexec/**/*.ts",
+    "packages/codexec-protocol/**/*.ts",
     "packages/codexec-quickjs/**/*.ts",
+    "packages/codexec-worker/**/*.ts",
     "packages/codexec-isolated-vm/**/*.ts",
     "vitest.config.ts"
   ],

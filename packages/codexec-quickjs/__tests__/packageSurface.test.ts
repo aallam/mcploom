@@ -6,4 +6,10 @@ describe("@mcploom/codexec-quickjs package surface", () => {
 
     expect(quickjs).toHaveProperty("QuickJsExecutor");
   });
+
+  it("exports the transport-backed runner from the dedicated subpath", async () => {
+    const runner = await import("@mcploom/codexec-quickjs/runner");
+
+    expect(runner).toHaveProperty("runQuickJsSession");
+  });
 });
