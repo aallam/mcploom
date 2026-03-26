@@ -47,6 +47,7 @@ npm run verify:isolated-vm
 | File                                                             | What it shows                                                 |
 | ---------------------------------------------------------------- | ------------------------------------------------------------- |
 | [`codexec-basic.ts`](./codexec-basic.ts)                         | Resolve a provider and execute guest code with QuickJS        |
+| [`codexec-worker.ts`](./codexec-worker.ts)                       | Run the same provider flow inside a worker-thread executor    |
 | [`codexec-mcp-provider.ts`](./codexec-mcp-provider.ts)           | Wrap MCP tools into a provider and execute against them       |
 | [`codexec-mcp-server.ts`](./codexec-mcp-server.ts)               | Expose `mcp_search_tools`, `mcp_execute_code`, and `mcp_code` |
 | [`codexec-isolated-vm-basic.ts`](./codexec-isolated-vm-basic.ts) | Run the same provider flow on the `isolated-vm` backend       |

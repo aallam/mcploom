@@ -17,6 +17,7 @@ If you want the simpler default backend, use [`@mcploom/codexec-quickjs`](https:
 
 - [Basic provider execution on `isolated-vm`](https://github.com/aallam/mcploom/blob/main/examples/codexec-isolated-vm-basic.ts)
 - [QuickJS-based codexec examples for the shared API surface](https://github.com/aallam/mcploom/blob/main/examples/codexec-basic.ts)
+- [Worker-backed QuickJS example for the alternate transport-backed path](https://github.com/aallam/mcploom/blob/main/examples/codexec-worker.ts)
 - [Full examples index](https://github.com/aallam/mcploom/tree/main/examples)
 
 ## Install
@@ -37,6 +38,12 @@ npm install @mcploom/codexec @mcploom/codexec-isolated-vm
 - In the default deployment model, provider definitions are controlled by the host application, while hostile users control guest code and tool inputs.
 - This package is still in-process execution. It should not be marketed or relied on as a hard security boundary for hostile code.
 - Providers remain the real capability boundary. If a tool is dangerous, guest code can invoke it.
+
+## Architecture Docs
+
+- [Codexec architecture overview](https://github.com/aallam/mcploom/blob/main/docs/architecture/codexec-overview.md)
+- [Codexec executors](https://github.com/aallam/mcploom/blob/main/docs/architecture/codexec-executors.md)
+- [Codexec MCP adapters and protocol](https://github.com/aallam/mcploom/blob/main/docs/architecture/codexec-mcp-and-protocol.md)
 
 ## Usage
 

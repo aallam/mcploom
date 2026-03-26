@@ -19,11 +19,13 @@ Executor-agnostic core for guest JavaScript that can call host tools directly or
 | Package                                                                                      | Best for                                                             |
 | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | [`@mcploom/codexec-quickjs`](https://www.npmjs.com/package/@mcploom/codexec-quickjs)         | Easiest setup, no native addon, good default backend                 |
+| [`@mcploom/codexec-worker`](https://www.npmjs.com/package/@mcploom/codexec-worker)           | QuickJS execution on a worker thread with a message boundary         |
 | [`@mcploom/codexec-isolated-vm`](https://www.npmjs.com/package/@mcploom/codexec-isolated-vm) | Native `isolated-vm` backend when you specifically want that runtime |
 
 ## Examples
 
 - [Basic provider execution](https://github.com/aallam/mcploom/blob/main/examples/codexec-basic.ts)
+- [Worker-backed provider execution](https://github.com/aallam/mcploom/blob/main/examples/codexec-worker.ts)
 - [Wrap MCP tools into a provider](https://github.com/aallam/mcploom/blob/main/examples/codexec-mcp-provider.ts)
 - [Expose MCP code-execution tools from a server](https://github.com/aallam/mcploom/blob/main/examples/codexec-mcp-server.ts)
 - [Run the same flow on `isolated-vm`](https://github.com/aallam/mcploom/blob/main/examples/codexec-isolated-vm-basic.ts)
@@ -46,6 +48,13 @@ Swap in `@mcploom/codexec-isolated-vm` when you want the native executor instead
 - Third-party MCP integrations should be reviewed as dependency-trust decisions, not folded into the primary end-user attacker model.
 - If the code source is hostile, run codexec behind stronger isolation such as a separate process, container, or VM.
 
+## Architecture Docs
+
+- [Codexec architecture overview](https://github.com/aallam/mcploom/blob/main/docs/architecture/codexec-overview.md)
+- [Codexec core architecture](https://github.com/aallam/mcploom/blob/main/docs/architecture/codexec-core.md)
+- [Codexec executors](https://github.com/aallam/mcploom/blob/main/docs/architecture/codexec-executors.md)
+- [Codexec MCP adapters and protocol](https://github.com/aallam/mcploom/blob/main/docs/architecture/codexec-mcp-and-protocol.md)
+
 ## Exports
 
 - `@mcploom/codexec`
@@ -55,6 +64,8 @@ Swap in `@mcploom/codexec-isolated-vm` when you want the native executor instead
   - JSON Schema type generation and executor/result types
 - `@mcploom/codexec/mcp`
   - `createMcpToolProvider`
+  - `openMcpToolProvider`
+  - `getMcpToolSourceServerInfo`
   - `codeMcpServer`
 
 ## Basic Usage

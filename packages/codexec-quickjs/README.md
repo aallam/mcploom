@@ -19,9 +19,16 @@ QuickJS executor backend for `@mcploom/codexec`.
 - This package is not presented as a hard security boundary for hostile code. It is best-effort in-process isolation.
 - If you need a stronger boundary, run codexec behind a separate process or container.
 
+## Architecture Docs
+
+- [Codexec architecture overview](https://github.com/aallam/mcploom/blob/main/docs/architecture/codexec-overview.md)
+- [Codexec executors](https://github.com/aallam/mcploom/blob/main/docs/architecture/codexec-executors.md)
+- [Codexec MCP adapters and protocol](https://github.com/aallam/mcploom/blob/main/docs/architecture/codexec-mcp-and-protocol.md)
+
 ## Examples
 
 - [Basic provider execution](https://github.com/aallam/mcploom/blob/main/examples/codexec-basic.ts)
+- [Worker-backed QuickJS execution](https://github.com/aallam/mcploom/blob/main/examples/codexec-worker.ts)
 - [MCP provider wrapping](https://github.com/aallam/mcploom/blob/main/examples/codexec-mcp-provider.ts)
 - [MCP server wrapper](https://github.com/aallam/mcploom/blob/main/examples/codexec-mcp-server.ts)
 - [Full examples index](https://github.com/aallam/mcploom/tree/main/examples)
