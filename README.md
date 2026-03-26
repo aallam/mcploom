@@ -4,7 +4,7 @@ Production building blocks for [Model Context Protocol](https://modelcontextprot
 Observe MCP traffic, proxy multiple backends behind one endpoint, and execute guest code against tool catalogs.
 
 [![License](https://img.shields.io/github/license/aallam/mcploom?style=flat-square)](https://github.com/aallam/mcploom/blob/main/LICENSE)
-[![Packages](https://img.shields.io/badge/packages-7-111827?style=flat-square)](#package-map)
+[![Packages](https://img.shields.io/badge/packages-8-111827?style=flat-square)](#package-map)
 
 ## Package Map
 
@@ -15,6 +15,7 @@ Observe MCP traffic, proxy multiple backends behind one endpoint, and execute gu
 | [`@mcploom/codexec`](./packages/codexec/)                         | [![npm](https://img.shields.io/npm/v/%40mcploom%2Fcodexec?style=flat-square)](https://www.npmjs.com/package/@mcploom/codexec)                         | Executor-agnostic core for guest JavaScript and MCP wrapping | [`codexec-basic.ts`](./examples/codexec-basic.ts)<br>[`codexec-mcp-server.ts`](./examples/codexec-mcp-server.ts)                                               |
 | [`@mcploom/codexec-protocol`](./packages/codexec-protocol/)       | [![npm](https://img.shields.io/npm/v/%40mcploom%2Fcodexec--protocol?style=flat-square)](https://www.npmjs.com/package/@mcploom/codexec-protocol)      | Transport-safe messages and transport-facing execution glue  | —                                                                                                                                                              |
 | [`@mcploom/codexec-quickjs`](./packages/codexec-quickjs/)         | [![npm](https://img.shields.io/npm/v/%40mcploom%2Fcodexec-quickjs?style=flat-square)](https://www.npmjs.com/package/@mcploom/codexec-quickjs)         | QuickJS backend for codexec                                  | [`codexec-basic.ts`](./examples/codexec-basic.ts)                                                                                                              |
+| [`@mcploom/codexec-process`](./packages/codexec-process/)         | [![npm](https://img.shields.io/npm/v/%40mcploom%2Fcodexec--process?style=flat-square)](https://www.npmjs.com/package/@mcploom/codexec-process)        | Child-process QuickJS executor for codexec                   | [`codexec-process.ts`](./examples/codexec-process.ts)                                                                                                          |
 | [`@mcploom/codexec-worker`](./packages/codexec-worker/)           | [![npm](https://img.shields.io/npm/v/%40mcploom%2Fcodexec--worker?style=flat-square)](https://www.npmjs.com/package/@mcploom/codexec-worker)          | Worker-thread QuickJS executor for codexec                   | [`codexec-worker.ts`](./examples/codexec-worker.ts)                                                                                                            |
 | [`@mcploom/codexec-isolated-vm`](./packages/codexec-isolated-vm/) | [![npm](https://img.shields.io/npm/v/%40mcploom%2Fcodexec-isolated-vm?style=flat-square)](https://www.npmjs.com/package/@mcploom/codexec-isolated-vm) | `isolated-vm` backend for codexec                            | [`codexec-isolated-vm-basic.ts`](./examples/codexec-isolated-vm-basic.ts)                                                                                      |
 
@@ -30,12 +31,13 @@ Good starting points:
 - [`examples/analytics-track-handlers.ts`](./examples/analytics-track-handlers.ts)
 - [`examples/proxy-basic.ts`](./examples/proxy-basic.ts)
 - [`examples/codexec-basic.ts`](./examples/codexec-basic.ts)
+- [`examples/codexec-process.ts`](./examples/codexec-process.ts)
 - [`examples/codexec-worker.ts`](./examples/codexec-worker.ts)
 - [`examples/codexec-mcp-server.ts`](./examples/codexec-mcp-server.ts)
 
 ## Docs
 
-- [Codexec Architecture Overview](./docs/codexec/architecture/codexec-overview.md)
+- [Codexec Architecture Overview](./docs/codexec/architecture/README.md)
 
 ## Development
 

@@ -19,12 +19,14 @@ Executor-agnostic core for guest JavaScript that can call host tools directly or
 | Package                                                                                      | Best for                                                             |
 | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | [`@mcploom/codexec-quickjs`](https://www.npmjs.com/package/@mcploom/codexec-quickjs)         | Easiest setup, no native addon, good default backend                 |
+| [`@mcploom/codexec-process`](https://www.npmjs.com/package/@mcploom/codexec-process)         | QuickJS execution in a child process with a stronger lifecycle split |
 | [`@mcploom/codexec-worker`](https://www.npmjs.com/package/@mcploom/codexec-worker)           | QuickJS execution on a worker thread with a message boundary         |
 | [`@mcploom/codexec-isolated-vm`](https://www.npmjs.com/package/@mcploom/codexec-isolated-vm) | Native `isolated-vm` backend when you specifically want that runtime |
 
 ## Examples
 
 - [Basic provider execution](https://github.com/aallam/mcploom/blob/main/examples/codexec-basic.ts)
+- [Process-backed provider execution](https://github.com/aallam/mcploom/blob/main/examples/codexec-process.ts)
 - [Worker-backed provider execution](https://github.com/aallam/mcploom/blob/main/examples/codexec-worker.ts)
 - [Wrap MCP tools into a provider](https://github.com/aallam/mcploom/blob/main/examples/codexec-mcp-provider.ts)
 - [Expose MCP code-execution tools from a server](https://github.com/aallam/mcploom/blob/main/examples/codexec-mcp-server.ts)
@@ -38,6 +40,7 @@ npm install @mcploom/codexec @mcploom/codexec-quickjs
 ```
 
 Swap in `@mcploom/codexec-isolated-vm` when you want the native executor instead.
+Swap in `@mcploom/codexec-process` when you want the QuickJS runtime to live in a fresh child process.
 
 ## Security Posture
 
@@ -50,10 +53,10 @@ Swap in `@mcploom/codexec-isolated-vm` when you want the native executor instead
 
 ## Architecture Docs
 
-- [Codexec architecture overview](https://github.com/aallam/mcploom/blob/main/docs/architecture/codexec-overview.md)
-- [Codexec core architecture](https://github.com/aallam/mcploom/blob/main/docs/architecture/codexec-core.md)
-- [Codexec executors](https://github.com/aallam/mcploom/blob/main/docs/architecture/codexec-executors.md)
-- [Codexec MCP adapters and protocol](https://github.com/aallam/mcploom/blob/main/docs/architecture/codexec-mcp-and-protocol.md)
+- [Codexec architecture overview](https://github.com/aallam/mcploom/blob/main/docs/codexec/architecture/README.md)
+- [Codexec core architecture](https://github.com/aallam/mcploom/blob/main/docs/codexec/architecture/codexec-core.md)
+- [Codexec executors](https://github.com/aallam/mcploom/blob/main/docs/codexec/architecture/codexec-executors.md)
+- [Codexec MCP adapters and protocol](https://github.com/aallam/mcploom/blob/main/docs/codexec/architecture/codexec-mcp-and-protocol.md)
 
 ## Exports
 

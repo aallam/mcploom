@@ -71,15 +71,16 @@ sequenceDiagram
 
 Today the protocol package is already part of the merged architecture, not just a future idea:
 
+- `ProcessExecutor` uses the full message model across the child-process boundary.
 - `WorkerExecutor` uses the full message model across the worker-thread boundary.
 - `QuickJsExecutor` does not use the protocol package directly; it shares the same runner semantics from core without crossing a transport boundary.
 - `IsolatedVmExecutor` also uses the shared core runner semantics, but keeps a direct `isolated-vm` bridge instead of protocol messages.
 
 That split is intentional today:
 
-- the worker path needs a real wire protocol
+- the process and worker paths need a real wire protocol
 - the in-process QuickJS and `isolated-vm` paths do not
-- all three now align on the same core runner-level contract
+- all four now align on the same core runner-level contract
 
 ## Current vs Next Step
 
@@ -87,21 +88,21 @@ That split is intentional today:
 flowchart TB
     subgraph Current
         C1["QuickJsExecutor<br/>shared runner semantics"]
-        C2["WorkerExecutor"]
-        C3["IsolatedVmExecutor<br/>shared runner semantics"]
+        C2["ProcessExecutor"]
+        C3["WorkerExecutor"]
+        C4["IsolatedVmExecutor<br/>shared runner semantics"]
         P["Protocol messages"]
         C2 --> P
+        C3 --> P
         C1 -. no transport boundary .-> C1
-        C3 -. direct ivm bridge .-> C3
+        C4 -. direct ivm bridge .-> C4
     end
 
     subgraph NextStepDirection
-        N1["worker or process runner"]
-        N2["remote runner service"]
-        N3["future isolated-vm transport-backed runner"]
+        N1["remote runner service"]
+        N2["future isolated-vm transport-backed runner"]
         N1 --> P
         N2 --> P
-        N3 --> P
     end
 ```
 
@@ -111,7 +112,6 @@ The protocol package creates a seam for future execution shapes without changing
 
 The most natural future uses are:
 
-- a separate-process QuickJS runner
 - a remote runner or worker fleet
 - a transport-backed `isolated-vm` runner if the project later wants that consistency
 
