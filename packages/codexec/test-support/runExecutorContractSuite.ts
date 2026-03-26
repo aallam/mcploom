@@ -221,9 +221,13 @@ export function runExecutorContractSuite(
     });
 
     it("aborts in-flight provider work when execution times out", async () => {
-      const executor = createExecutor({ timeoutMs: 10 });
+      const executor = createExecutor({ timeoutMs: 100 });
       let aborted = false;
       let started = false;
+      let resolveStarted: (() => void) | undefined;
+      const startedPromise = new Promise<void>((resolve) => {
+        resolveStarted = resolve;
+      });
       const provider = resolveProvider({
         name: "mcp",
         tools: {
@@ -231,6 +235,7 @@ export function runExecutorContractSuite(
             execute: async (_input, context) =>
               await new Promise((_resolve, reject) => {
                 started = true;
+                resolveStarted?.();
                 context.signal.addEventListener(
                   "abort",
                   () => {
@@ -244,7 +249,9 @@ export function runExecutorContractSuite(
         },
       });
 
-      const result = await executor.execute("await mcp.hang({})", [provider]);
+      const executionPromise = executor.execute("await mcp.hang({})", [provider]);
+      await startedPromise;
+      const result = await executionPromise;
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(result.ok).toBe(false);
