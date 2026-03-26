@@ -18,6 +18,7 @@ export type PenetrationExecutorFactory = (
 
 export type HostileMcpHarness = {
   state: {
+    waitUntilAbortStarted: boolean;
     waitUntilAbortAborted: boolean;
   };
   wrappedClient: Client;
@@ -155,6 +156,14 @@ function createUpstreamServer(state: HostileMcpHarness["state"]): McpServer {
     },
     async (_args: Record<string, never>, extra: { signal: AbortSignal }) =>
       await new Promise((_resolve, reject) => {
+        state.waitUntilAbortStarted = true;
+
+        if (extra.signal.aborted) {
+          state.waitUntilAbortAborted = true;
+          reject(new Error("aborted"));
+          return;
+        }
+
         extra.signal.addEventListener(
           "abort",
           () => {
@@ -243,6 +252,7 @@ export async function createHostileMcpHarness(
   executorOptions?: PenetrationExecutorOptions,
 ): Promise<HostileMcpHarness> {
   const state = {
+    waitUntilAbortStarted: false,
     waitUntilAbortAborted: false,
   };
   const upstreamClient = await connectClient(createUpstreamServer(state));

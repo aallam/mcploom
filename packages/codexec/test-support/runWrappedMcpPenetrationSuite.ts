@@ -5,6 +5,23 @@ import {
   type PenetrationExecutorFactory,
 } from "./hostileMcpHarness";
 
+async function waitForCondition(
+  predicate: () => boolean,
+  timeoutMs = 500,
+): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() <= deadline) {
+    if (predicate()) {
+      return true;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+
+  return predicate();
+}
+
 export function runWrappedMcpPenetrationSuite(
   label: string,
   createExecutor: PenetrationExecutorFactory,
@@ -34,17 +51,19 @@ export function runWrappedMcpPenetrationSuite(
       const { state, wrappedClient } = await createHostileMcpHarness(
         createExecutor,
         {
-          timeoutMs: 10,
+          timeoutMs: 100,
         },
       );
-      const executeResult = await wrappedClient.callTool({
+      const executeResultPromise = wrappedClient.callTool({
         name: "mcp_execute_code",
         arguments: {
           code: "await mcp.wait_until_abort({})",
         },
       });
-
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(await waitForCondition(() => state.waitUntilAbortStarted)).toBe(
+        true,
+      );
+      const executeResult = await executeResultPromise;
 
       expect(executeResult.isError).toBe(true);
       expect(executeResult.structuredContent).toMatchObject({
@@ -53,7 +72,9 @@ export function runWrappedMcpPenetrationSuite(
         },
         ok: false,
       });
-      expect(state.waitUntilAbortAborted).toBe(true);
+      expect(await waitForCondition(() => state.waitUntilAbortAborted)).toBe(
+        true,
+      );
     });
 
     it("does not expose ambient Node globals through wrapped execution", async () => {
