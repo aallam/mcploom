@@ -1,6 +1,6 @@
 # @mcploom/codexec-protocol
 
-Transport-safe manifests, messages, and dispatcher helpers for codexec execution runtimes.
+Transport-safe messages and transport-facing execution helpers for codexec runtimes.
 
 [![npm version](https://img.shields.io/npm/v/%40mcploom%2Fcodexec--protocol?style=flat-square)](https://www.npmjs.com/package/@mcploom/codexec-protocol)
 [![License](https://img.shields.io/github/license/aallam/mcploom?style=flat-square)](https://github.com/aallam/mcploom/blob/main/LICENSE)
@@ -11,18 +11,16 @@ This is a low-level package for building transport-backed codexec runtimes. It d
 
 It currently provides:
 
-- provider manifests derived from `ResolvedToolProvider`
 - runner/dispatcher message types
-- a host-side tool dispatcher that turns `tool_call` messages back into resolved tool invocations
+- transport-facing access to the shared manifest and dispatcher model from `@mcploom/codexec`
 
 Most application code should use `@mcploom/codexec` plus an executor package directly instead of importing this package.
 
 ## Used By
 
-- `@mcploom/codexec-quickjs`
 - `@mcploom/codexec-worker`
 
-`@mcploom/codexec-isolated-vm` does not currently use this package.
+`@mcploom/codexec-quickjs` and `@mcploom/codexec-isolated-vm` use the shared runner semantics from `@mcploom/codexec` directly and do not currently depend on this package.
 
 ## Install
 

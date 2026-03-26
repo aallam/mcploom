@@ -14,17 +14,20 @@ import {
 
 import {
   ExecuteFailure,
+  type ExecutorRuntimeOptions,
   formatConsoleLine,
   getExecutionTimeoutMessage,
   isExecuteFailure,
   isKnownExecuteErrorCode,
   normalizeCode,
   normalizeThrownMessage,
+  type ProviderManifest,
+  type ToolCall,
+  type ToolCallResult,
   truncateLogs,
   type ExecuteError,
   type ExecuteResult,
 } from "../../../codexec/src/runtime.ts";
-import type { ProviderManifest, ToolCallResult } from "../../../codexec-protocol/src/index.ts";
 
 import {
   createGuestErrorHandle,
@@ -45,11 +48,7 @@ const loadDefaultModule = memoizePromiseFactory(() =>
 /**
  * Transport-neutral host tool call emitted from a QuickJS session.
  */
-export interface QuickJsSessionToolCall {
-  input: unknown;
-  providerName: string;
-  safeToolName: string;
-}
+export type QuickJsSessionToolCall = ToolCall;
 
 /**
  * Input required to run one transport-backed QuickJS execution session.
@@ -58,7 +57,7 @@ export interface QuickJsSessionRequest {
   abortController?: AbortController;
   code: string;
   onToolCall: (
-    call: QuickJsSessionToolCall,
+    call: ToolCall,
   ) => Promise<ToolCallResult> | ToolCallResult;
   onStarted?: () => void;
   providers: ProviderManifest[];
@@ -68,7 +67,8 @@ export interface QuickJsSessionRequest {
 /**
  * Options controlling one transport-backed QuickJS session.
  */
-export type QuickJsSessionOptions = QuickJsExecutorOptions;
+export type QuickJsSessionOptions = QuickJsExecutorOptions &
+  ExecutorRuntimeOptions;
 
 /**
  * Converts unexpected executor failures into stable public result errors.

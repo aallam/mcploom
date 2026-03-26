@@ -61,6 +61,8 @@ Swap in `@mcploom/codexec-isolated-vm` when you want the native executor instead
   - `resolveProvider`
   - `normalizeCode`
   - `sanitizeToolName`
+  - `extractProviderManifests`
+  - `createToolCallDispatcher`
   - JSON Schema type generation and executor/result types
 - `@mcploom/codexec/mcp`
   - `createMcpToolProvider`

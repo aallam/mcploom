@@ -11,7 +11,7 @@ import {
   createToolCallDispatcher,
   extractProviderManifests,
   type DispatcherMessage,
-  type ExecutionRuntimeOptions,
+  type ExecutorRuntimeOptions,
   type RunnerMessage,
   type ToolCallMessage,
 } from "@mcploom/codexec-protocol";
@@ -32,7 +32,7 @@ function resolveWorkerEntryUrl(): URL {
 
 function createRuntimeOptions(
   options: WorkerExecutorOptions,
-): Required<ExecutionRuntimeOptions> {
+): Required<ExecutorRuntimeOptions> {
   return {
     maxLogChars: options.maxLogChars ?? DEFAULT_MAX_LOG_CHARS,
     maxLogLines: options.maxLogLines ?? DEFAULT_MAX_LOG_LINES,

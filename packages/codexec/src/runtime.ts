@@ -12,6 +12,10 @@ export {
   isExecuteFailure,
   isJsonSerializable,
 } from "./errors.ts";
+export {
+  createToolCallDispatcher,
+  extractProviderManifests,
+} from "./runner.ts";
 export type { Executor } from "./executor/executor.ts";
 export type {
   ExecuteError,
@@ -26,3 +30,10 @@ export type {
   ToolSchema,
   TypegenToolDescriptor,
 } from "./types.ts";
+export type {
+  ExecutorRuntimeOptions,
+  ProviderManifest,
+  ProviderToolManifest,
+  ToolCall,
+  ToolCallResult,
+} from "./runner.ts";

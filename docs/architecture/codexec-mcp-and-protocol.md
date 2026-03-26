@@ -42,21 +42,27 @@ flowchart LR
 
 It currently provides:
 
-- provider manifests derived from `ResolvedToolProvider`
 - `execute`, `cancel`, `started`, `tool_call`, `tool_result`, and `done` message types
-- the host-side dispatcher that turns a protocol `tool_call` back into a resolved tool invocation
+- transport-facing access to the shared manifest and dispatcher model from `@mcploom/codexec`
+
+The important architectural split is:
+
+- `@mcploom/codexec` owns manifest extraction and host-side tool dispatch semantics
+- `@mcploom/codexec-protocol` owns wire messages and the transport-shaped package surface around those semantics
 
 ```mermaid
 sequenceDiagram
     participant Dispatcher as Trusted host
+    participant Core as codexec core
     participant Protocol as codexec-protocol
     participant Runner as Runner runtime
 
-    Dispatcher->>Protocol: extractProviderManifests(providers)
+    Dispatcher->>Core: extractProviderManifests(providers)
+    Dispatcher->>Protocol: execute / cancel message types
     Dispatcher->>Runner: execute(code, manifests, limits)
     Runner-->>Dispatcher: started
     Runner-->>Dispatcher: tool_call(providerName, safeToolName, input)
-    Dispatcher->>Protocol: createToolCallDispatcher(...)
+    Dispatcher->>Core: createToolCallDispatcher(...)
     Dispatcher-->>Runner: tool_result(ok/result or error)
     Runner-->>Dispatcher: done(ExecuteResult)
 ```
@@ -65,27 +71,28 @@ sequenceDiagram
 
 Today the protocol package is already part of the merged architecture, not just a future idea:
 
-- `QuickJsExecutor` uses protocol manifests and the host-side dispatcher while still running in-process.
 - `WorkerExecutor` uses the full message model across the worker-thread boundary.
-- `IsolatedVmExecutor` does not currently use the protocol; it uses a direct `isolated-vm` bridge instead.
+- `QuickJsExecutor` does not use the protocol package directly; it shares the same runner semantics from core without crossing a transport boundary.
+- `IsolatedVmExecutor` also uses the shared core runner semantics, but keeps a direct `isolated-vm` bridge instead of protocol messages.
 
 That split is intentional today:
 
-- the QuickJS path is already aligned with transport-backed execution
-- the `isolated-vm` path is optimized for its direct in-process bridge
+- the worker path needs a real wire protocol
+- the in-process QuickJS and `isolated-vm` paths do not
+- all three now align on the same core runner-level contract
 
 ## Current vs Next Step
 
 ```mermaid
 flowchart TB
     subgraph Current
-        C1["QuickJsExecutor"]
+        C1["QuickJsExecutor<br/>shared runner semantics"]
         C2["WorkerExecutor"]
-        C3["IsolatedVmExecutor"]
-        P["Protocol"]
-        C1 --> P
+        C3["IsolatedVmExecutor<br/>shared runner semantics"]
+        P["Protocol messages"]
         C2 --> P
-        C3 -. direct bridge .-> C3
+        C1 -. no transport boundary .-> C1
+        C3 -. direct ivm bridge .-> C3
     end
 
     subgraph NextStepDirection
@@ -118,4 +125,5 @@ So the current docs should be read as:
 
 - MCP adapters are production architecture now
 - `codexec-protocol` is production architecture now
+- shared runner semantics in `@mcploom/codexec` are production architecture now
 - remote/fleet execution is an enabled direction, not current shipped behavior

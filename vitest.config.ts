@@ -47,6 +47,13 @@ export default defineConfig({
         ),
       },
       {
+        find: "@mcploom/codexec-isolated-vm/runner",
+        replacement: path.join(
+          repoRoot,
+          "packages/codexec-isolated-vm/src/runner/index.ts",
+        ),
+      },
+      {
         find: "@mcploom/codexec-isolated-vm",
         replacement: path.join(
           repoRoot,

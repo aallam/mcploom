@@ -8,7 +8,7 @@ The core package exposes three main responsibilities:
 
 - Resolve host-authored tools into a deterministic guest namespace
 - Normalize guest code into an executable async shape
-- Define the stable execution contract shared by all executors
+- Define the stable execution contract and shared runner semantics used by all executors
 
 The main public concepts are:
 
@@ -19,6 +19,8 @@ The main public concepts are:
 | `Executor`             | Runtime-specific implementation of `execute(code, providers)`                       |
 | `ExecuteResult`        | Stable success/error envelope returned by every executor                            |
 | `ToolExecutionContext` | Abort-aware metadata passed to each tool invocation                                 |
+| `ProviderManifest`     | Transport-safe view of a resolved provider exposed to reusable runners              |
+| `ToolCallResult`       | Trusted host response to a runner-emitted tool call                                 |
 
 ## Provider Resolution Pipeline
 
@@ -64,6 +66,39 @@ That normalization handles:
 - multi-statement snippets whose final expression should become the return value
 
 The practical effect is that all executors can treat guest code as “an async function to invoke,” even if the input started as a casual snippet.
+
+## Shared Runner Semantics
+
+The core package now also owns the small runner-level contract that sits between resolved providers and runtime-specific runners.
+
+That contract is intentionally transport-neutral:
+
+- `extractProviderManifests()` converts resolved providers into transport-safe manifests
+- `createToolCallDispatcher()` turns a runner-emitted tool call back into a trusted host invocation
+- `ExecutorRuntimeOptions` carries timeout, memory, and log limits in a runtime-agnostic form
+
+```mermaid
+sequenceDiagram
+    participant Host as Host app
+    participant Core as codexec core
+    participant Runner as Runtime-specific runner
+    participant Tool as Resolved tool wrapper
+
+    Host->>Core: extractProviderManifests(providers)
+    Host->>Runner: runSession(code, manifests, onToolCall)
+    Runner->>Core: onToolCall({ providerName, safeToolName, input })
+    Core->>Tool: descriptor.execute(input, context)
+    Tool-->>Core: JSON-safe result or ExecuteError
+    Core-->>Runner: ToolCallResult
+```
+
+This seam is what lets codexec share semantics across:
+
+- the in-process QuickJS executor
+- the in-process `isolated-vm` executor
+- the worker-backed QuickJS executor
+
+without forcing every runtime through the same transport implementation.
 
 ## Execution Contract
 
@@ -139,7 +174,7 @@ flowchart TD
     GUEST --> OUT5["runtime-specific classification"]
 ```
 
-Executors are responsible for their own runtime-specific classification rules, but they all return the same public `ExecuteResult` envelope.
+Executors are responsible for their own runtime-specific classification rules, but they all return the same public `ExecuteResult` envelope and align to the same runner-level host callback model.
 
 ## Why the Core Stays Small
 
@@ -150,4 +185,10 @@ The core package does not own QuickJS, `isolated-vm`, worker threads, or transpo
 - MCP wrapper servers
 - future process or remote execution models
 
-The consequence is deliberate duplication of some runtime-specific logic in executor packages, but the public contract stays stable and easy to reason about.
+The consequence is deliberate separation between:
+
+- core execution and runner semantics in `@mcploom/codexec`
+- transport/session mechanics in `@mcploom/codexec-protocol`
+- runtime-specific bridge code in executor packages
+
+That split keeps the public contract stable without forcing every backend through identical plumbing.
