@@ -15,6 +15,9 @@
       "@mcploom/codexec-worker": ["./packages/codexec-worker/src/index.ts"],
       "@mcploom/codexec-isolated-vm": [
         "./packages/codexec-isolated-vm/src/index.ts"
+      ],
+      "@mcploom/codexec-isolated-vm/runner": [
+        "./packages/codexec-isolated-vm/src/runner/index.ts"
       ]
     },
     "types": ["node", "vitest/globals"]

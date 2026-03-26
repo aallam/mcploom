@@ -6,4 +6,10 @@ describe("@mcploom/codexec-isolated-vm package surface", () => {
 
     expect(isolatedVm).toHaveProperty("IsolatedVmExecutor");
   });
+
+  it("exports the reusable runner from the dedicated subpath", async () => {
+    const runner = await import("@mcploom/codexec-isolated-vm/runner");
+
+    expect(runner).toHaveProperty("runIsolatedVmSession");
+  });
 });

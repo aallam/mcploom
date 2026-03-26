@@ -4,11 +4,11 @@ This page explains how the current executor packages differ and what trade-offs 
 
 ## Executor Comparison
 
-| Package                        | Runtime boundary                       | Tool bridge style                  | Main strengths                                   | Main constraints                                     |
-| ------------------------------ | -------------------------------------- | ---------------------------------- | ------------------------------------------------ | ---------------------------------------------------- |
-| `@mcploom/codexec-quickjs`     | Fresh in-process QuickJS runtime       | Protocol-style dispatcher callback | No native addon, simple install, default backend | Still in-process                                     |
-| `@mcploom/codexec-isolated-vm` | Fresh in-process `isolated-vm` context | Direct host reference bridge       | Native V8 isolate semantics, no worker startup   | Native addon, `--no-node-snapshot`, still in-process |
-| `@mcploom/codexec-worker`      | Worker thread + fresh QuickJS runtime  | `codexec-protocol` messages        | Hard-stop worker termination, off-thread runtime | Worker startup overhead, still same OS process       |
+| Package                        | Runtime boundary                       | Tool bridge style                 | Main strengths                                   | Main constraints                                     |
+| ------------------------------ | -------------------------------------- | --------------------------------- | ------------------------------------------------ | ---------------------------------------------------- |
+| `@mcploom/codexec-quickjs`     | Fresh in-process QuickJS runtime       | Shared runner callback            | No native addon, simple install, default backend | Still in-process                                     |
+| `@mcploom/codexec-isolated-vm` | Fresh in-process `isolated-vm` context | Shared runner callback + ivm refs | Native V8 isolate semantics, no worker startup   | Native addon, `--no-node-snapshot`, still in-process |
+| `@mcploom/codexec-worker`      | Worker thread + fresh QuickJS runtime  | `codexec-protocol` messages       | Hard-stop worker termination, off-thread runtime | Worker startup overhead, still same OS process       |
 
 ```mermaid
 flowchart LR
@@ -19,19 +19,22 @@ flowchart LR
     IVMRT["isolated-vm context"]
     WORKER["WorkerExecutor"]
     THREAD["Worker thread"]
+    RUNNER["core runner semantics"]
     PROTO["codexec-protocol"]
     WQJS["QuickJS runtime in worker"]
 
     HOST --> QJS --> QJSRT
     HOST --> IVM --> IVMRT
     HOST --> WORKER --> THREAD --> WQJS
-    QJS --> PROTO
+    QJS --> RUNNER
+    IVM --> RUNNER
     WORKER --> PROTO
+    PROTO --> RUNNER
 ```
 
 ## QuickJS Today
 
-`QuickJsExecutor` is the default reference implementation for codexec. It already uses `codexec-protocol` concepts even though it runs in-process: providers are converted to manifests, and host tool calls are dispatched through the shared dispatcher helper before the QuickJS runner turns them back into guest-visible async functions.
+`QuickJsExecutor` is the default reference implementation for codexec. It uses the shared runner semantics from `@mcploom/codexec`: providers are converted to manifests, host tool calls are dispatched through the shared dispatcher helper, and the reusable QuickJS runner turns them back into guest-visible async functions.
 
 That design gives QuickJS two useful properties:
 
@@ -40,15 +43,16 @@ That design gives QuickJS two useful properties:
 
 ## isolated-vm Today
 
-`IsolatedVmExecutor` takes a different path. It builds a fresh `isolated-vm` context, injects console and tool bindings directly, and uses `setSync()` / `applySyncPromise()` to bridge guest tool calls back to host implementations.
+`IsolatedVmExecutor` now follows the same high-level runner contract as QuickJS, but keeps its native bridge internally. The reusable `runIsolatedVmSession()` runner accepts manifests and an `onToolCall` callback, then implements the runtime-specific bridge with `setSync()` / `applySyncPromise()` inside the `isolated-vm` context.
 
 That means:
 
 - it does not currently depend on `codexec-protocol`
 - it avoids the extra message loop used by worker-backed execution
-- its runtime-specific bridge logic lives in the executor package itself
+- its runtime-specific bridge logic still lives in the executor package itself
+- it is now aligned with the same runner-level shape used by QuickJS and worker-backed execution
 
-This is a reasonable design for the current in-process executor, but it also means the `isolated-vm` package is less aligned with future process- or network-backed execution than the QuickJS path.
+This is a cleaner maintainability point than the previous design: the package still keeps the native bridge where it belongs, but the executor no longer owns a separate copy of the host-side manifest and tool-dispatch semantics.
 
 ## Worker-Backed QuickJS
 
@@ -75,12 +79,12 @@ sequenceDiagram
 
 The three executors expose the same public result shape, but they enforce limits differently.
 
-| Concern             | QuickJS                                | isolated-vm                                   | Worker                                                                          |
-| ------------------- | -------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------- |
-| Timeout             | QuickJS interrupt/deadline handling    | `isolated-vm` timeout + host deadline helpers | Host timeout + worker cancellation + worker termination backstop                |
-| Memory              | QuickJS runtime memory limit           | Isolate memory limit                          | QuickJS memory limit inside worker, optional worker resource limits as backstop |
-| Abort to host tools | Abort signal passed through dispatcher | Abort signal passed through direct bridge     | Abort signal passed through dispatcher on host side                             |
-| Log capture         | Captured inside runner                 | Captured through injected console bindings    | Captured inside worker-side QuickJS runner                                      |
+| Concern             | QuickJS                                   | isolated-vm                                     | Worker                                                                          |
+| ------------------- | ----------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------- |
+| Timeout             | QuickJS interrupt/deadline handling       | `isolated-vm` timeout + host deadline helpers   | Host timeout + worker cancellation + worker termination backstop                |
+| Memory              | QuickJS runtime memory limit              | Isolate memory limit                            | QuickJS memory limit inside worker, optional worker resource limits as backstop |
+| Abort to host tools | Abort signal passed through core callback | Abort signal passed through core callback + ivm | Abort signal passed through dispatcher on host side                             |
+| Log capture         | Captured inside runner                    | Captured through injected console bindings      | Captured inside worker-side QuickJS runner                                      |
 
 ## Security and Operational Trade-offs
 

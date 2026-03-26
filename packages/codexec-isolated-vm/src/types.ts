@@ -1,15 +1,9 @@
+import type { ExecutorRuntimeOptions } from "@mcploom/codexec";
+
 /**
  * Options for constructing an {@link IsolatedVmExecutor}.
  */
-export interface IsolatedVmExecutorOptions {
+export interface IsolatedVmExecutorOptions extends ExecutorRuntimeOptions {
   /** Optional isolated-vm module loader override for tests or custom builds. */
   loadModule?: () => Promise<unknown> | unknown;
-  /** Maximum total characters preserved across captured log lines. */
-  maxLogChars?: number;
-  /** Maximum number of captured log lines returned in the result. */
-  maxLogLines?: number;
-  /** Guest memory limit in bytes. */
-  memoryLimitBytes?: number;
-  /** Wall-clock execution timeout in milliseconds. */
-  timeoutMs?: number;
 }

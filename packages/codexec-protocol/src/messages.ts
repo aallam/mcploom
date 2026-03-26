@@ -1,54 +1,10 @@
-import type { ExecuteError, ExecuteResult } from "@mcploom/codexec";
-
-/**
- * Transport-safe metadata for one exposed tool.
- */
-export interface ProviderToolManifest {
-  description?: string;
-  originalName: string;
-  safeName: string;
-}
-
-/**
- * Transport-safe namespace manifest shared with remote or out-of-process runners.
- */
-export interface ProviderManifest {
-  name: string;
-  tools: Record<string, ProviderToolManifest>;
-  types: string;
-}
-
-/**
- * Execution limits forwarded to runner implementations.
- */
-export interface ExecutionRuntimeOptions {
-  maxLogChars?: number;
-  maxLogLines?: number;
-  memoryLimitBytes?: number;
-  timeoutMs?: number;
-}
-
-/**
- * Tool invocation request forwarded from a runner to the trusted host.
- */
-export interface ToolCall {
-  input: unknown;
-  providerName: string;
-  safeToolName: string;
-}
-
-/**
- * Trusted host response to a tool invocation request.
- */
-export type ToolCallResult =
-  | {
-      ok: true;
-      result: unknown;
-    }
-  | {
-      error: ExecuteError;
-      ok: false;
-    };
+import type {
+  ExecuteResult,
+  ExecutorRuntimeOptions,
+  ProviderManifest,
+  ToolCall,
+  ToolCallResult,
+} from "@mcploom/codexec";
 
 /**
  * Message sent from dispatcher to runner to start one execution session.
@@ -56,7 +12,7 @@ export type ToolCallResult =
 export interface ExecuteMessage {
   code: string;
   id: string;
-  options: ExecutionRuntimeOptions;
+  options: ExecutorRuntimeOptions;
   providers: ProviderManifest[];
   type: "execute";
 }

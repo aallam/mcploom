@@ -1,5 +1,10 @@
-import type { ExecuteResult, ResolvedToolProvider, Executor } from "@mcploom/codexec";
-import { createToolCallDispatcher, extractProviderManifests } from "@mcploom/codexec-protocol";
+import {
+  createToolCallDispatcher,
+  extractProviderManifests,
+  type ExecuteResult,
+  type Executor,
+  type ResolvedToolProvider,
+} from "@mcploom/codexec";
 
 import { runQuickJsSession } from "./runner/index";
 import type { QuickJsExecutorOptions } from "./types";

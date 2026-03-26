@@ -31,6 +31,7 @@ npm install @mcploom/codexec @mcploom/codexec-isolated-vm
 - Node 22+ must run with `--no-node-snapshot`
 - the optional `isolated-vm` native dependency must install successfully in the host environment
 - native-addon failures are surfaced when `IsolatedVmExecutor` is constructed or used
+- advanced consumers can import the reusable runner from `@mcploom/codexec-isolated-vm/runner`
 
 ## Security Notes
 

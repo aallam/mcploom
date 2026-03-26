@@ -4,6 +4,8 @@ describe("@mcploom/codexec package surface", () => {
   it("exports the core symbols without bundling QuickJS", async () => {
     const core = await import("@mcploom/codexec");
 
+    expect(core).toHaveProperty("createToolCallDispatcher");
+    expect(core).toHaveProperty("extractProviderManifests");
     expect(core).toHaveProperty("normalizeCode");
     expect(core).toHaveProperty("sanitizeToolName");
     expect(core).toHaveProperty("resolveProvider");

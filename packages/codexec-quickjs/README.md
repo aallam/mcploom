@@ -39,6 +39,8 @@ QuickJS executor backend for `@mcploom/codexec`.
 npm install @mcploom/codexec @mcploom/codexec-quickjs
 ```
 
+Advanced consumers can also import the reusable QuickJS runner from `@mcploom/codexec-quickjs/runner`.
+
 ## Usage
 
 ```ts
