@@ -13,6 +13,7 @@ This doc set is for two audiences:
 - Read [codexec-core.md](./codexec-core.md) for provider resolution, execution contracts, and error handling.
 - Read [codexec-executors.md](./codexec-executors.md) for QuickJS, process, worker-thread, and `isolated-vm` trade-offs.
 - Read [codexec-mcp-and-protocol.md](./codexec-mcp-and-protocol.md) for MCP wrapping and the current role of `codexec-protocol`.
+- Read [codexec-security-and-scalability.md](./codexec-security-and-scalability.md) for current executor boundary analysis and future security/scalability directions.
 
 ## Package Map
 
