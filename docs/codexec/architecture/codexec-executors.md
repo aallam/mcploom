@@ -7,6 +7,7 @@ This page explains how the current executor packages differ and what trade-offs 
 | Package                        | Runtime boundary                       | Tool bridge style                 | Main strengths                                   | Main constraints                                     |
 | ------------------------------ | -------------------------------------- | --------------------------------- | ------------------------------------------------ | ---------------------------------------------------- |
 | `@mcploom/codexec-quickjs`     | Fresh in-process QuickJS runtime       | Shared runner callback            | No native addon, simple install, default backend | Still in-process                                     |
+| `@mcploom/codexec-remote`      | App-defined remote transport boundary  | Shared host session + transport   | Same API across a remote boundary                | You own transport/runtime deployment                 |
 | `@mcploom/codexec-process`     | Child process + fresh QuickJS runtime  | Shared host session + IPC         | Hard-kill process termination, stronger split    | Process startup overhead, still not a container/VM   |
 | `@mcploom/codexec-isolated-vm` | Fresh in-process `isolated-vm` context | Shared runner callback + ivm refs | Native V8 isolate semantics, no worker startup   | Native addon, `--no-node-snapshot`, still in-process |
 | `@mcploom/codexec-worker`      | Worker thread + fresh QuickJS runtime  | Shared host session + messages    | Hard-stop worker termination, off-thread runtime | Worker startup overhead, still same OS process       |
@@ -16,6 +17,8 @@ flowchart LR
     HOST["Host application"]
     QJS["QuickJsExecutor"]
     QJSRT["QuickJS runtime"]
+    REM["RemoteExecutor"]
+    REMRT["Remote runner"]
     PROC["ProcessExecutor"]
     PROCCHILD["Child process"]
     IVM["IsolatedVmExecutor"]
@@ -28,10 +31,13 @@ flowchart LR
     PQJS["QuickJS runtime in child process"]
 
     HOST --> QJS --> QJSRT
+    HOST --> REM --> REMRT
     HOST --> PROC --> PROCCHILD --> PQJS
     HOST --> IVM --> IVMRT
     HOST --> WORKER --> THREAD --> WQJS
     QJS --> RUNNER
+    REM --> PROTO
+    REMRT --> RUNNER
     IVM --> RUNNER
     PROC --> PROTO
     WORKER --> PROTO
@@ -107,17 +113,18 @@ sequenceDiagram
 
 The four executors expose the same public result shape, but they enforce limits differently.
 
-| Concern             | QuickJS                                   | Process                                                                 | isolated-vm                                     | Worker                                                                          |
-| ------------------- | ----------------------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------- |
-| Timeout             | QuickJS interrupt/deadline handling       | Shared host-session timeout + process cancellation + `SIGKILL` backstop | `isolated-vm` timeout + host deadline helpers   | Shared host-session timeout + worker cancellation + worker termination backstop |
-| Memory              | QuickJS runtime memory limit              | QuickJS runtime memory limit inside the child process                   | Isolate memory limit                            | QuickJS memory limit inside worker, optional worker resource limits as backstop |
-| Abort to host tools | Abort signal passed through core callback | Abort signal passed through shared host session                         | Abort signal passed through core callback + ivm | Abort signal passed through shared host session                                 |
-| Log capture         | Captured inside runner                    | Captured inside child-side QuickJS runner                               | Captured through injected console bindings      | Captured inside worker-side QuickJS runner                                      |
+| Concern             | QuickJS                                   | Remote                                                                    | Process                                                                 | isolated-vm                                     | Worker                                                                          |
+| ------------------- | ----------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------- |
+| Timeout             | QuickJS interrupt/deadline handling       | Shared host-session timeout + remote cancel + transport teardown          | Shared host-session timeout + process cancellation + `SIGKILL` backstop | `isolated-vm` timeout + host deadline helpers   | Shared host-session timeout + worker cancellation + worker termination backstop |
+| Memory              | QuickJS runtime memory limit              | Remote runtime decides the hard boundary; codexec still forwards limits   | QuickJS runtime memory limit inside the child process                   | Isolate memory limit                            | QuickJS memory limit inside worker, optional worker resource limits as backstop |
+| Abort to host tools | Abort signal passed through core callback | Abort signal passed through shared host session                           | Abort signal passed through shared host session                         | Abort signal passed through core callback + ivm | Abort signal passed through shared host session                                 |
+| Log capture         | Captured inside runner                    | Captured inside the remote runner and returned over the transport boundary | Captured inside child-side QuickJS runner                               | Captured through injected console bindings      | Captured inside worker-side QuickJS runner                                      |
 
 ## Security and Operational Trade-offs
 
 - All four executors are documented as best-effort isolation, not hard hostile-code boundaries.
 - QuickJS is the easiest operational default and has the cleanest shared runtime story today.
+- Remote execution keeps the same executor API while moving the runtime behind an app-defined boundary, but codexec deliberately does not ship the network stack for you.
 - Process-backed QuickJS gives a stronger lifecycle split than worker threads, but it is still not equivalent to a container or VM boundary.
 - `isolated-vm` is the most specialized option and carries the most environment-specific operational requirements.
 - Worker-backed QuickJS improves lifecycle isolation and hard-stop behavior, but not process-level trust isolation.
@@ -126,6 +133,7 @@ The four executors expose the same public result shape, but they enforce limits 
 ## Choosing an Executor
 
 - Choose `QuickJsExecutor` when you want the default backend with the least operational friction.
+- Choose `RemoteExecutor` when you want the same execution API but need the runtime to live behind an application-defined transport boundary.
 - Choose `ProcessExecutor` when you want the QuickJS semantics in a fresh child process with a hard-kill timeout path.
 - Choose `IsolatedVmExecutor` when you explicitly want `isolated-vm` and can support its native/runtime constraints.
 - Choose `WorkerExecutor` when you want the QuickJS semantics but prefer the runtime to live off the main thread with a hard-stop termination path.

@@ -109,6 +109,7 @@ interface Executor {
   execute(
     code: string,
     providers: ResolvedToolProvider[],
+    options?: ExecutionOptions,
   ): Promise<ExecuteResult>;
 }
 ```
@@ -134,7 +135,7 @@ sequenceDiagram
 
 - Fresh execution state per call
 - No ambient Node globals injected by codexec itself
-- Timeout handling
+- Timeout handling and caller cancellation
 - Bounded log capture
 - JSON-only crossing of tool/result boundaries
 - Stable error codes in the returned `ExecuteResult`

@@ -1,6 +1,8 @@
 import {
+  createTimeoutExecuteResult,
   createToolCallDispatcher,
   extractProviderManifests,
+  type ExecutionOptions,
   type ExecuteResult,
   type Executor,
   type ResolvedToolProvider,
@@ -28,9 +30,19 @@ export class IsolatedVmExecutor implements Executor {
   async execute(
     code: string,
     providers: ResolvedToolProvider[],
+    options: ExecutionOptions = {},
   ): Promise<ExecuteResult> {
+    if (options.signal?.aborted) {
+      return createTimeoutExecuteResult();
+    }
+
     const abortController = new AbortController();
     const onToolCall = createToolCallDispatcher(providers, abortController.signal);
+    const onAbort = () => {
+      abortController.abort();
+    };
+
+    options.signal?.addEventListener("abort", onAbort, { once: true });
 
     try {
       return await runIsolatedVmSession(
@@ -40,9 +52,13 @@ export class IsolatedVmExecutor implements Executor {
           onToolCall,
           providers: extractProviderManifests(providers),
         },
-        this.options,
+        {
+          ...this.options,
+          ...options,
+        },
       );
     } finally {
+      options.signal?.removeEventListener("abort", onAbort);
       abortController.abort();
     }
   }

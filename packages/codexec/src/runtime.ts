@@ -1,4 +1,5 @@
 export {
+  createTimeoutExecuteResult,
   createExecutionContext,
   formatConsoleLine,
   getExecutionTimeoutMessage,
@@ -31,6 +32,7 @@ export type {
   TypegenToolDescriptor,
 } from "./types.ts";
 export type {
+  ExecutionOptions,
   ExecutorRuntimeOptions,
   ProviderManifest,
   ProviderToolManifest,

@@ -13,6 +13,7 @@ It currently provides:
 
 - runner/dispatcher message types
 - a shared host transport session for worker/process-style executors
+- the same host transport session shape used by `@mcploom/codexec-remote`
 - transport-facing access to the shared manifest and dispatcher model from `@mcploom/codexec`
 
 Most application code should use `@mcploom/codexec` plus an executor package directly instead of importing this package.
@@ -22,6 +23,7 @@ Treat this package as experimental and transport-internal while the execution ar
 
 - `@mcploom/codexec-worker`
 - `@mcploom/codexec-process`
+- `@mcploom/codexec-remote`
 
 `@mcploom/codexec-quickjs` and `@mcploom/codexec-isolated-vm` use the shared runner semantics from `@mcploom/codexec` directly and do not currently depend on this package.
 

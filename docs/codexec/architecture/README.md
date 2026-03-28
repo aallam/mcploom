@@ -21,6 +21,7 @@ flowchart LR
     APP["Host application"]
     CORE["@mcploom/codexec<br/>provider resolution + runner semantics + MCP adapters"]
     QJS["@mcploom/codexec-quickjs<br/>in-process QuickJS executor + reusable runner"]
+    REM["@mcploom/codexec-remote<br/>transport-backed remote executor"]
     PROC["@mcploom/codexec-process<br/>child-process QuickJS executor"]
     IVM["@mcploom/codexec-isolated-vm<br/>in-process isolated-vm executor + reusable runner"]
     PROTO["@mcploom/codexec-protocol<br/>transport messages + shared host session"]
@@ -29,10 +30,12 @@ flowchart LR
 
     APP --> CORE
     APP --> QJS
+    APP --> REM
     APP --> PROC
     APP --> IVM
     APP --> WORKER
     CORE --> MCP
+    REM --> PROTO
     PROC --> PROTO
     WORKER --> PROTO
     PROC --> QJS
@@ -45,6 +48,7 @@ flowchart LR
 | ------------------------------ | -------------------------------------------------------------------------------------------------- |
 | `@mcploom/codexec`             | Core types, provider resolution, shared runner semantics, and MCP adapters                         |
 | `@mcploom/codexec-quickjs`     | Default executor backend using a fresh QuickJS runtime per execution and a reusable QuickJS runner |
+| `@mcploom/codexec-remote`      | Transport-backed executor that reuses the QuickJS protocol endpoint across an app-defined boundary |
 | `@mcploom/codexec-process`     | Child-process executor that runs the QuickJS session behind Node IPC                               |
 | `@mcploom/codexec-isolated-vm` | Alternate executor backend using a fresh `isolated-vm` context and a reusable isolated-vm runner   |
 | `@mcploom/codexec-protocol`    | Transport-safe execution messages plus the shared host session used by worker/process executors    |
@@ -68,7 +72,7 @@ sequenceDiagram
 
     Host->>Core: resolveProvider() or openMcpToolProvider()
     Core-->>Host: ResolvedToolProvider
-    Host->>Exec: execute(code, [provider])
+    Host->>Exec: execute(code, [provider], options?)
     Exec->>Guest: boot fresh runtime
     Guest->>Exec: await namespace.tool(input)
     Exec->>Host: invoke resolved tool wrapper
@@ -103,4 +107,4 @@ Key implications:
 
 ## Current Architecture in One Paragraph
 
-Today, `@mcploom/codexec` owns the stable execution contract, provider resolution, shared runner semantics, and MCP adapters. `@mcploom/codexec-quickjs` and `@mcploom/codexec-isolated-vm` each expose a runtime-specific reusable runner. `@mcploom/codexec-process` and `@mcploom/codexec-worker` are now thin transport adapters around the shared QuickJS protocol endpoint, while `@mcploom/codexec-protocol` owns the transport boundary: message shapes plus the shared host session used to drive transport-backed execution without copying executor semantics.
+Today, `@mcploom/codexec` owns the stable execution contract, provider resolution, shared runner semantics, and MCP adapters. `@mcploom/codexec-quickjs` and `@mcploom/codexec-isolated-vm` each expose a runtime-specific reusable runner. `@mcploom/codexec-process`, `@mcploom/codexec-worker`, and `@mcploom/codexec-remote` are transport adapters around the shared QuickJS protocol endpoint, while `@mcploom/codexec-protocol` owns the transport boundary: message shapes plus the shared host session used to drive transport-backed execution without copying executor semantics.

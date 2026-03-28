@@ -9,6 +9,8 @@ import {
   type RunnerMessage,
 } from "@mcploom/codexec-protocol";
 import {
+  createTimeoutExecuteResult,
+  type ExecutionOptions,
   type ExecuteResult,
   type Executor,
   type ResolvedToolProvider,
@@ -29,12 +31,18 @@ function resolveWorkerEntryUrl(): URL {
 
 function createRuntimeOptions(
   options: WorkerExecutorOptions,
+  overrides: ExecutionOptions = {},
 ): Required<ExecutorRuntimeOptions> {
   return {
-    maxLogChars: options.maxLogChars ?? DEFAULT_MAX_LOG_CHARS,
-    maxLogLines: options.maxLogLines ?? DEFAULT_MAX_LOG_LINES,
-    memoryLimitBytes: options.memoryLimitBytes ?? DEFAULT_MEMORY_LIMIT_BYTES,
-    timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
+    maxLogChars:
+      overrides.maxLogChars ?? options.maxLogChars ?? DEFAULT_MAX_LOG_CHARS,
+    maxLogLines:
+      overrides.maxLogLines ?? options.maxLogLines ?? DEFAULT_MAX_LOG_LINES,
+    memoryLimitBytes:
+      overrides.memoryLimitBytes ??
+      options.memoryLimitBytes ??
+      DEFAULT_MEMORY_LIMIT_BYTES,
+    timeoutMs: overrides.timeoutMs ?? options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
   };
 }
 
@@ -94,7 +102,12 @@ export class WorkerExecutor implements Executor {
   async execute(
     code: string,
     providers: ResolvedToolProvider[],
+    options: ExecutionOptions = {},
   ): Promise<ExecuteResult> {
+    if (options.signal?.aborted) {
+      return createTimeoutExecuteResult();
+    }
+
     const worker = new Worker(resolveWorkerEntryUrl(), {
       execArgv: getNodeTransportExecArgv(import.meta.url),
       resourceLimits: this.options.workerResourceLimits,
@@ -105,7 +118,8 @@ export class WorkerExecutor implements Executor {
       code,
       executionId: randomUUID(),
       providers,
-      runtimeOptions: createRuntimeOptions(this.options),
+      runtimeOptions: createRuntimeOptions(this.options, options),
+      signal: options.signal,
       transport: createWorkerTransport(worker),
     });
   }

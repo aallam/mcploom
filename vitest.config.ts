@@ -43,6 +43,13 @@ export default defineConfig({
         ),
       },
       {
+        find: "@mcploom/codexec-remote",
+        replacement: path.join(
+          repoRoot,
+          "packages/codexec-remote/src/index.ts",
+        ),
+      },
+      {
         find: "@mcploom/codexec-worker",
         replacement: path.join(
           repoRoot,

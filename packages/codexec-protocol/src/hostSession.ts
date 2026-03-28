@@ -42,6 +42,7 @@ export interface HostTransportSessionOptions {
   executionId: string;
   providers: ResolvedToolProvider[];
   runtimeOptions: Required<ExecutorRuntimeOptions>;
+  signal?: AbortSignal;
   transport: HostTransport;
 }
 
@@ -74,6 +75,7 @@ export async function runHostTransportSession(
     options.providers,
     abortController.signal,
   );
+  const abortSignal = options.signal;
 
   return await new Promise<ExecuteResult>((resolve) => {
     let finished = false;
@@ -127,6 +129,7 @@ export async function runHostTransportSession(
       offClose();
       offError();
       offMessage();
+      abortSignal?.removeEventListener("abort", onAbortSignal);
     };
 
     const finish = (result: ExecuteResult) => {
@@ -210,9 +213,22 @@ export async function runHostTransportSession(
       fail(reason?.message ?? "Transport closed unexpectedly");
     };
 
+    const onAbortSignal = () => {
+      if (finished) {
+        return;
+      }
+
+      abortController.abort();
+      send({
+        id: options.executionId,
+        type: "cancel",
+      });
+    };
+
     const offMessage = options.transport.onMessage(onMessage);
     const offError = options.transport.onError(onError);
     const offClose = options.transport.onClose(onClose);
+    abortSignal?.addEventListener("abort", onAbortSignal, { once: true });
 
     send({
       code: options.code,

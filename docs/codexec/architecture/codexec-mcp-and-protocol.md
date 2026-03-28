@@ -74,6 +74,7 @@ Today the protocol package is already part of the merged architecture, not just 
 
 - `ProcessExecutor` uses the shared host session across the child-process boundary.
 - `WorkerExecutor` uses the shared host session across the worker-thread boundary.
+- `RemoteExecutor` uses the same shared host session across an app-defined transport boundary.
 - `QuickJsExecutor` does not use the protocol package directly; it shares the same runner semantics from core without crossing a transport boundary.
 - `IsolatedVmExecutor` also uses the shared core runner semantics, but keeps a direct `isolated-vm` bridge instead of protocol messages.
 
@@ -84,7 +85,7 @@ That split is intentional today:
 - worker and process now also align on the same parent-side host session and the same child-side QuickJS protocol endpoint
 - all four now align on the same core runner-level contract
 
-## Current vs Next Step
+## Current Shape
 
 ```mermaid
 flowchart TB
@@ -100,7 +101,7 @@ flowchart TB
         C4 -. direct ivm bridge .-> C4
     end
 
-    subgraph NextStepDirection
+    subgraph CurrentTransportBackedRuntimes
         N1["remote runner service"]
         N2["future isolated-vm transport-backed runner"]
         N1 --> P
@@ -108,7 +109,7 @@ flowchart TB
     end
 ```
 
-## Next-Step Direction
+## Current Direction
 
 The protocol package creates a seam for future execution shapes without changing the `Executor` contract in `@mcploom/codexec`.
 
@@ -117,10 +118,9 @@ The most natural future uses are:
 - a remote runner or worker fleet
 - a transport-backed `isolated-vm` runner if the project later wants that consistency
 
-What is not merged today:
+What is still not merged today:
 
-- a remote executor package
-- HTTP or WebSocket session transport for codexec execution
+- built-in HTTP or WebSocket transport adapters
 - a protocol-backed `IsolatedVmExecutor`
 
 So the current docs should be read as:
@@ -129,4 +129,5 @@ So the current docs should be read as:
 - `codexec-protocol` is production architecture now
 - shared runner semantics in `@mcploom/codexec` are production architecture now
 - the worker/process transport stack is production architecture now and no longer duplicates its protocol loop in each executor
-- remote/fleet execution is an enabled direction, not current shipped behavior
+- remote execution is now a shipped package when you want to supply your own transport boundary
+- fleet scheduling and transport adapters remain an enabled direction, not current shipped behavior

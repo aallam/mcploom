@@ -220,6 +220,24 @@ export function runExecutorContractSuite(
       expect(result.logs).toEqual(["12345", "67890"]);
     });
 
+    it("allows per-call runtime option overrides", async () => {
+      const executor = createExecutor({
+        maxLogChars: 5,
+        maxLogLines: 1,
+      });
+      const result = await executor.execute(
+        'console.log("12345"); console.log("67890"); console.log("abc")',
+        [],
+        {
+          maxLogChars: 20,
+          maxLogLines: 3,
+        },
+      );
+
+      expect(result.ok).toBe(true);
+      expect(result.logs).toEqual(["12345", "67890", "abc"]);
+    });
+
     it("aborts in-flight provider work when execution times out", async () => {
       const executor = createExecutor({ timeoutMs: 500 });
       let aborted = false;
@@ -270,6 +288,84 @@ export function runExecutorContractSuite(
       });
       expect(started).toBe(true);
       expect(aborted).toBe(true);
+    });
+
+    it("aborts promptly when the caller signal is cancelled", async () => {
+      const executor = createExecutor({ timeoutMs: 1_000 });
+      const controller = new AbortController();
+      let aborted = false;
+      let resolveStarted: (() => void) | undefined;
+      const startedPromise = new Promise<void>((resolve) => {
+        resolveStarted = resolve;
+      });
+      const provider = resolveProvider({
+        name: "mcp",
+        tools: {
+          hang: {
+            execute: async (_input, context) =>
+              await new Promise((_resolve, reject) => {
+                resolveStarted?.();
+
+                if (context.signal.aborted) {
+                  aborted = true;
+                  reject(new Error("aborted"));
+                  return;
+                }
+
+                context.signal.addEventListener(
+                  "abort",
+                  () => {
+                    aborted = true;
+                    reject(new Error("aborted"));
+                  },
+                  { once: true },
+                );
+              }),
+          },
+        },
+      });
+
+      const executionPromise = executor.execute(
+        "await mcp.hang({})",
+        [provider],
+        { signal: controller.signal },
+      );
+      await startedPromise;
+      const abortedAt = Date.now();
+      controller.abort();
+      const result = await executionPromise;
+      const elapsedAfterAbort = Date.now() - abortedAt;
+
+      expect(result.ok).toBe(false);
+      if (result.ok) {
+        throw new Error("Expected timeout result");
+      }
+      expect(result.error).toMatchObject({
+        code: "timeout",
+      });
+      expect(aborted).toBe(true);
+      expect(elapsedAfterAbort).toBeLessThan(500);
+    });
+
+    it("returns timeout promptly when the caller signal is already aborted", async () => {
+      const executor = createExecutor({ timeoutMs: 1_000 });
+      const controller = new AbortController();
+      controller.abort();
+
+      const startedAt = Date.now();
+      const result = await executor.execute("while (true) {}", [], {
+        signal: controller.signal,
+      });
+      const elapsed = Date.now() - startedAt;
+
+      expect(result.ok).toBe(false);
+      if (result.ok) {
+        throw new Error("Expected timeout result");
+      }
+      expect(result.error).toMatchObject({
+        code: "timeout",
+      });
+      expect(elapsed).toBeLessThan(500);
     });
 
     it("returns serialization_error for unsupported guest results", async () => {
