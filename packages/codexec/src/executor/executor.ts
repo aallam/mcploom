@@ -1,3 +1,4 @@
+import type { ExecutionOptions } from "../runner";
 import type { ExecuteResult, ResolvedToolProvider } from "../types";
 
 /**
@@ -7,5 +8,6 @@ export interface Executor {
   execute(
     code: string,
     providers: ResolvedToolProvider[],
+    options?: ExecutionOptions,
   ): Promise<ExecuteResult>;
 }

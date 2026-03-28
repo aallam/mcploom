@@ -1,4 +1,9 @@
-import type { ExecuteErrorCode, ToolExecutionContext } from "../types";
+import type {
+  ExecuteError,
+  ExecuteErrorCode,
+  ExecuteResult,
+  ToolExecutionContext,
+} from "../types";
 
 const EXECUTION_TIMEOUT_MESSAGE = "Execution timed out";
 
@@ -29,6 +34,21 @@ export function isKnownExecuteErrorCode(
  */
 export function getExecutionTimeoutMessage(): string {
   return EXECUTION_TIMEOUT_MESSAGE;
+}
+
+/**
+ * Creates the canonical timeout failure result used for preflight cancellation.
+ */
+export function createTimeoutExecuteResult(durationMs = 0): ExecuteResult {
+  return {
+    durationMs,
+    error: {
+      code: "timeout",
+      message: getExecutionTimeoutMessage(),
+    } satisfies ExecuteError,
+    logs: [],
+    ok: false,
+  };
 }
 
 /**

@@ -1,5 +1,6 @@
 export type { Executor } from "./executor/executor";
 export {
+  createTimeoutExecuteResult,
   createExecutionContext,
   formatConsoleLine,
   getExecutionTimeoutMessage,
@@ -25,6 +26,7 @@ export {
 } from "./runner";
 export { generateTypesFromJsonSchema } from "./typegen/jsonSchema";
 export type {
+  ExecutionOptions,
   ExecutorRuntimeOptions,
   ProviderManifest,
   ProviderToolManifest,

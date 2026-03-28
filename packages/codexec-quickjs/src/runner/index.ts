@@ -258,7 +258,24 @@ function createToolHandle(
     };
     const onAbort = () => {
       signal.removeEventListener("abort", onAbort);
-      disposeDeferred();
+      if (!context.alive || !deferred.alive) {
+        disposeDeferred();
+        return;
+      }
+
+      const errorHandle = createGuestErrorHandle(
+        context,
+        "timeout",
+        getExecutionTimeoutMessage(),
+        trustedHostErrorKey,
+      );
+
+      try {
+        deferred.reject(errorHandle);
+      } finally {
+        errorHandle.dispose();
+        disposeDeferred();
+      }
     };
 
     signal.addEventListener("abort", onAbort, { once: true });
@@ -378,7 +395,10 @@ export async function runQuickJsSession(
     );
     const executionStartedAt = Date.now();
     deadline = executionStartedAt + timeoutMs;
-    runtime.setInterruptHandler(shouldInterruptAfterDeadline(deadline));
+    const shouldInterrupt = shouldInterruptAfterDeadline(deadline);
+    runtime.setInterruptHandler((currentRuntime) => {
+      return signal.aborted || shouldInterrupt(currentRuntime);
+    });
     request.onStarted?.();
 
     const executableSource = normalizeCode(request.code);

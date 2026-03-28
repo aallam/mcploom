@@ -38,6 +38,13 @@ export interface ExecutorRuntimeOptions {
 }
 
 /**
+ * Public execution options accepted by executors per call.
+ */
+export interface ExecutionOptions extends ExecutorRuntimeOptions {
+  signal?: AbortSignal;
+}
+
+/**
  * Tool invocation request emitted from a runner.
  */
 export interface ToolCall {

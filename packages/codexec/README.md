@@ -19,6 +19,7 @@ Executor-agnostic core for guest JavaScript that can call host tools directly or
 | Package                                                                                      | Best for                                                             |
 | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | [`@mcploom/codexec-quickjs`](https://www.npmjs.com/package/@mcploom/codexec-quickjs)         | Easiest setup, no native addon, good default backend                 |
+| [`@mcploom/codexec-remote`](https://www.npmjs.com/package/@mcploom/codexec-remote)           | Same executor API, but with a caller-supplied remote boundary        |
 | [`@mcploom/codexec-process`](https://www.npmjs.com/package/@mcploom/codexec-process)         | QuickJS execution in a child process with a stronger lifecycle split |
 | [`@mcploom/codexec-worker`](https://www.npmjs.com/package/@mcploom/codexec-worker)           | QuickJS execution on a worker thread with a message boundary         |
 | [`@mcploom/codexec-isolated-vm`](https://www.npmjs.com/package/@mcploom/codexec-isolated-vm) | Native `isolated-vm` backend when you specifically want that runtime |
@@ -27,6 +28,7 @@ Executor-agnostic core for guest JavaScript that can call host tools directly or
 
 - [Basic provider execution](https://github.com/aallam/mcploom/blob/main/examples/codexec-basic.ts)
 - [Process-backed provider execution](https://github.com/aallam/mcploom/blob/main/examples/codexec-process.ts)
+- [Remote provider execution](https://github.com/aallam/mcploom/blob/main/examples/codexec-remote.ts)
 - [Worker-backed provider execution](https://github.com/aallam/mcploom/blob/main/examples/codexec-worker.ts)
 - [Wrap MCP tools into a provider](https://github.com/aallam/mcploom/blob/main/examples/codexec-mcp-provider.ts)
 - [Expose MCP code-execution tools from a server](https://github.com/aallam/mcploom/blob/main/examples/codexec-mcp-server.ts)
@@ -41,6 +43,7 @@ npm install @mcploom/codexec @mcploom/codexec-quickjs
 
 Swap in `@mcploom/codexec-isolated-vm` when you want the native executor instead.
 Swap in `@mcploom/codexec-process` when you want the QuickJS runtime to live in a fresh child process.
+Swap in `@mcploom/codexec-remote` when you want the same API but a caller-managed remote transport boundary.
 
 ## Security Posture
 
@@ -49,7 +52,7 @@ Swap in `@mcploom/codexec-process` when you want the QuickJS runtime to live in 
 - Providers are explicit capability grants. Every tool you expose is authority you are handing to guest code.
 - In the default deployment model, provider and MCP tool definitions are controlled by the application, not by the end user.
 - Third-party MCP integrations should be reviewed as dependency-trust decisions, not folded into the primary end-user attacker model.
-- If the code source is hostile, prefer stronger isolation such as `@mcploom/codexec-process`, a container, or a VM.
+- If the code source is hostile, prefer stronger isolation such as `@mcploom/codexec-process`, `@mcploom/codexec-remote`, a container, or a VM.
 
 ## Architecture Docs
 
@@ -61,6 +64,7 @@ Swap in `@mcploom/codexec-process` when you want the QuickJS runtime to live in 
 ## Exports
 
 - `@mcploom/codexec`
+  - `ExecutionOptions`
   - `resolveProvider`
   - `normalizeCode`
   - `sanitizeToolName`
@@ -97,9 +101,11 @@ const provider = resolveProvider({
 });
 
 const executor = new QuickJsExecutor();
-const result = await executor.execute("await tools.add({ x: 2, y: 5 })", [
-  provider,
-]);
+const result = await executor.execute(
+  "await tools.add({ x: 2, y: 5 })",
+  [provider],
+  { timeoutMs: 250 },
+);
 ```
 
 ## MCP Adapters
