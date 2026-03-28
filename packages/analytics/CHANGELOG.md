@@ -1,5 +1,11 @@
 # @mcploom/analytics
 
+## 0.3.1
+
+### Patch Changes
+
+- 5fc3c22: Update the MCP SDK integration to 1.28.0 and republish the full package set.
+
 ## 0.3.0
 
 ### Minor Changes
