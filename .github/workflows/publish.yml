@@ -40,6 +40,6 @@ jobs:
       - name: Create Release Pull Request or Publish
         uses: changesets/action@v1
         with:
-          publish: npx changeset publish
+          publish: node scripts/changeset-publish.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
