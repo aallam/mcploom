@@ -1,6 +1,6 @@
 {
   "name": "@mcploom/codexec-isolated-vm",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "isolated-vm executor for the mcploom codexec core package.",
   "license": "MIT",
   "type": "module",
@@ -46,7 +46,7 @@
   "homepage": "https://github.com/aallam/mcploom/tree/main/packages/codexec-isolated-vm#readme",
   "bugs": "https://github.com/aallam/mcploom/issues",
   "dependencies": {
-    "@mcploom/codexec": "^0.3.0"
+    "@mcploom/codexec": "^0.3.1"
   },
   "optionalDependencies": {
     "isolated-vm": "^6.0.1"

@@ -1,6 +1,6 @@
 {
   "name": "@mcploom/analytics",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Lightweight analytics and observability for MCP servers.",
   "license": "MIT",
   "type": "module",
