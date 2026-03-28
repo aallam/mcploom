@@ -1,5 +1,13 @@
 # @mcploom/proxy
 
+## 0.3.0
+
+### Minor Changes
+
+- a81d14a: Raise the published Node.js support floor from 20 to 22 across the infrastructure packages.
+
+  This release also refreshes the published package metadata so the npm packages match the current workspace baseline.
+
 ## 0.2.1
 
 ### Patch Changes

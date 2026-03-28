@@ -1,6 +1,6 @@
 {
   "name": "@mcploom/codexec-protocol",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Transport-safe protocol and dispatcher helpers for mcploom codexec executors.",
   "license": "MIT",
   "type": "module",
@@ -41,6 +41,6 @@
   "homepage": "https://github.com/aallam/mcploom/tree/main/packages/codexec-protocol#readme",
   "bugs": "https://github.com/aallam/mcploom/issues",
   "dependencies": {
-    "@mcploom/codexec": "^0.2.5"
+    "@mcploom/codexec": "^0.3.0"
   }
 }

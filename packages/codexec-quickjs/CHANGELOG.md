@@ -1,5 +1,19 @@
 # @mcploom/codexec-quickjs
 
+## 0.2.0
+
+### Minor Changes
+
+- a81d14a: Extend the published codexec packages with the new per-call execution options, protocol-backed runner surfaces, and the remote-executor foundation documented in the repo.
+
+  This release also raises the published Node.js support floor from 20 to 22 for the codexec family.
+
+### Patch Changes
+
+- Updated dependencies [a81d14a]
+  - @mcploom/codexec@0.3.0
+  - @mcploom/codexec-protocol@0.1.1
+
 ## 0.1.6
 
 ### Patch Changes
